@@ -249,8 +249,7 @@ a.feature:hover img{transform:scale(1.02)}
 .steps3{counter-reset:s}
 
 /* specs */
-.specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:56px 64px}
-@media (max-width:860px){.specs{grid-template-columns:1fr}}
+.specs{display:grid;grid-template-columns:minmax(0,1fr);gap:48px}
 .spec h3{font:500 11.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding-bottom:16px;border-bottom:1px solid var(--line-2)}
 .spec dl{margin:0}
 .spec .r{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:4px 20px;padding:15px 0;border-bottom:1px solid var(--line)}
@@ -703,9 +702,6 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
           <div class="r"><dt>Hearing range</dt><dd>100–500 m per node</dd></div>
           <div class="r"><dt>Band</dt><dd>Infrasound to audible</dd></div>
           <div class="r"><dt>Timing</dt><dd>GPS, backup clock</dd></div>
-        </dl></div>
-        <div class="spec" data-r><h3>Power</h3><dl>
-          <div class="r"><dt>Listening draw</dt><dd>≈ 0.2 W</dd></div>
         </dl></div>
         <div class="spec" data-r><h3>Build and cost</h3><dl>
           <div class="r"><dt>Drop node</dt><dd>≈ 0.6 kg, &lt; 50 mm wide<small>Survives a 10 m drop (goal)</small></dd></div>
