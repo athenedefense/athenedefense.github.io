@@ -3,892 +3,963 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ATHENE Listening Node</title>
-<meta name="description" content="ATHENE builds passive, low-cost acoustic nodes that hear drones at launch and point to where they came from.">
+<title>ATHENE — Passive acoustic UAS detection</title>
+<meta name="description" content="ATHENE builds low-cost, passive listening nodes that detect drones at launch and point to where they came from.">
+<meta name="theme-color" content="#060708">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' fill='%23060708'/%3E%3Cpath d='M12 4 20 19H4Z' fill='none' stroke='%23F3F3F0' stroke-width='1.8'/%3E%3Ccircle cx='12' cy='14' r='2' fill='%23FF8A3D'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: every view is a "slide" from the Listening Node deck: mono eyebrow row, light display title beside an
-   OBJECTIVE block, a hairline rule, content in hairline rows and black callouts, mono footer with a page count. */
 :root{
-  --paper:#EFEDE8; --paper-2:#E6E3DC; --ink:#121211; --body:#2C2B29; --muted:#6E6B65; --hair:#CBC7BF; --hair-2:#DCD8D0;
-  --inv:#121211; --inv-fg:#F1EFEA; --inv-muted:#A7A39B; --inv-line:#3A3935;
-  --cover:#121211; --cover-fg:#F1EFEA; --cover-muted:#9C988F; --cover-line:#34332F;
-  --focus:#121211; --ok:#2F6B45; --err:#A3342B;
-  --f-display:"Helvetica Neue","Geist",Helvetica,Arial,sans-serif;
-  --f-body:"Helvetica Neue","Geist",Helvetica,Arial,sans-serif;
-  --f-mono:Menlo,"Geist Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
-  --wrap:1200px;
+  --bg:#060708; --bg-1:#0C0D10; --bg-2:#131519;
+  --line:rgba(255,255,255,.08); --line-2:rgba(255,255,255,.15); --line-3:rgba(255,255,255,.34);
+  --fg:#F3F3F0; --fg-2:#B3B6BC; --muted:#7B8089;
+  --signal:#FF8A3D; --signal-soft:rgba(255,138,61,.14);
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --wrap:1240px; --gut:clamp(16px,4vw,40px); --head:64px;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --paper:#131312; --paper-2:#1C1B19; --ink:#EEECE6; --body:#D2CEC6; --muted:#949088; --hair:#3A3834; --hair-2:#2A2926;
-  --inv:#EEECE6; --inv-fg:#131312; --inv-muted:#56534D; --inv-line:#C9C5BD;
-  --cover:#0B0B0A; --cover-fg:#F1EFEA; --cover-muted:#8F8B83; --cover-line:#2C2B28;
-  --focus:#EEECE6; --ok:#7BC495; --err:#F08A7E; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --paper:#131312; --paper-2:#1C1B19; --ink:#EEECE6; --body:#D2CEC6; --muted:#949088; --hair:#3A3834; --hair-2:#2A2926;
-  --inv:#EEECE6; --inv-fg:#131312; --inv-muted:#56534D; --inv-line:#C9C5BD;
-  --cover:#0B0B0A; --cover-fg:#F1EFEA; --cover-muted:#8F8B83; --cover-line:#2C2B28;
-  --focus:#EEECE6; --ok:#7BC495; --err:#F08A7E; color-scheme:dark}
-
-*{box-sizing:border-box}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 html,body{margin:0}
-img{max-width:100%}
-[hidden]{display:none!important}
-body{background:var(--paper);color:var(--body);font-family:var(--f-body);font-size:16px;line-height:1.55;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--paper)}
+body{background:var(--bg);color:var(--fg-2);font:400 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overflow-x:hidden}
+img,svg{display:block;max-width:100%}
 a{color:inherit}
-:focus-visible{outline:2px solid var(--focus);outline-offset:3px}
-.wrap{max-width:var(--wrap);margin:0 auto;padding-inline:clamp(0px,2.5vw,28px)}
-.mono{font-family:var(--f-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase}
-.muted{color:var(--muted)}
-h1,h2,h3{color:var(--ink);text-wrap:balance;margin:0;font-weight:300;font-family:var(--f-display)}
-h1{font-size:clamp(40px,6vw,68px);line-height:.92;letter-spacing:-.025em}
-h2{font-size:clamp(28px,3.4vw,40px);line-height:1.02;letter-spacing:-.02em}
-h3{font-size:19px;line-height:1.25;font-weight:500;letter-spacing:-.005em}
-p{margin:0;max-width:66ch}
-.lede{font-size:clamp(17px,1.6vw,19px);color:var(--body)}
-.tabular{font-variant-numeric:tabular-nums}
+p{margin:0}
+[hidden]{display:none!important}
+::selection{background:var(--signal);color:var(--bg)}
+:focus-visible{outline:1.5px solid var(--signal);outline-offset:3px}
+.wrap{max-width:var(--wrap);margin:0 auto;padding-left:max(var(--gut),env(safe-area-inset-left,0px));padding-right:max(var(--gut),env(safe-area-inset-right,0px))}
+.mono{font-family:var(--mono);font-weight:500;font-size:11.5px;letter-spacing:.13em;text-transform:uppercase}
+.tab{font-variant-numeric:tabular-nums}
+h1,h2,h3{color:var(--fg);font-weight:500;margin:0;text-wrap:balance}
+.d1{font-size:clamp(46px,7.6vw,116px);line-height:.93;letter-spacing:-.048em}
+.d2{font-size:clamp(42px,6vw,88px);line-height:.96;letter-spacing:-.045em}
+h2{font-size:clamp(30px,3.7vw,54px);line-height:1.03;letter-spacing:-.036em}
+h3{font-size:19px;line-height:1.3;letter-spacing:-.012em}
+.lede{font-size:clamp(17px,1.55vw,20px);line-height:1.5;color:var(--fg-2);max-width:46ch}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--muted)}
+.eyebrow::before{content:"";width:6px;height:6px;background:var(--signal);flex:none}
+
+/* corner brackets */
+.hud{position:relative}
+.hud::after{content:"";position:absolute;inset:-1px;pointer-events:none;--k:12px;--c:var(--line-3);
+  background:
+    linear-gradient(var(--c) 0 0) 0 0/var(--k) 1px, linear-gradient(var(--c) 0 0) 0 0/1px var(--k),
+    linear-gradient(var(--c) 0 0) 100% 0/var(--k) 1px, linear-gradient(var(--c) 0 0) 100% 0/1px var(--k),
+    linear-gradient(var(--c) 0 0) 0 100%/var(--k) 1px, linear-gradient(var(--c) 0 0) 0 100%/1px var(--k),
+    linear-gradient(var(--c) 0 0) 100% 100%/var(--k) 1px, linear-gradient(var(--c) 0 0) 100% 100%/1px var(--k);
+  background-repeat:no-repeat}
+.hud.hot::after{--c:var(--signal)}
+
+/* buttons */
+.btns{display:flex;gap:12px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:12px;height:48px;padding:0 22px;font:500 12px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;
+  text-decoration:none;color:var(--fg);background:transparent;border:1px solid var(--line-2);cursor:pointer;transition:background .2s,border-color .2s,color .2s;white-space:nowrap}
+.btn:hover{border-color:var(--line-3);background:rgba(255,255,255,.04)}
+.btn.primary{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.btn.primary:hover{background:#fff;border-color:#fff}
+.btn .ar{transition:transform .2s}
+.btn:hover .ar{transform:translateX(3px)}
+.btn.sm{height:36px;padding:0 14px;font-size:11px}
+.btn.sm::before{content:"";width:5px;height:5px;background:var(--signal)}
+.tlink{display:inline-flex;gap:10px;align-items:center;color:var(--fg);text-decoration:none;font:500 12px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--line-3);transition:border-color .2s}
+.tlink:hover{border-color:var(--signal)}
 
 /* header */
-.site-head{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--hair);
-  margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.head-row{display:flex;align-items:center;gap:20px;min-height:58px}
-.brand{display:flex;align-items:baseline;gap:10px;text-decoration:none;color:var(--ink);flex:none}
-.brand b{font-family:var(--f-mono);font-weight:500;font-size:14px;letter-spacing:.28em}
-.brand span{font-family:var(--f-mono);font-size:10px;letter-spacing:.18em;color:var(--muted)}
-.nav{display:flex;gap:4px;margin-left:auto;overflow-x:auto;scrollbar-width:none;min-width:0}
-.nav::-webkit-scrollbar{display:none}
-.nav a{font-family:var(--f-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;text-decoration:none;color:var(--muted);
-  padding:9px 10px;border-radius:2px;white-space:nowrap}
-.nav a:hover{color:var(--ink)}
-.nav a[aria-current="page"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--ink)}
-.nav a.cta{color:var(--inv-fg);background:var(--inv)}
-.nav a.cta[aria-current="page"]{box-shadow:none}
-@media (max-width:720px){.brand span{display:none}.head-row{gap:10px}}
-
-/* slide header */
-.view{padding-block:34px 26px}
-.slide-top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
-.slide-head{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:28px 48px;align-items:start;padding-block:26px 30px;border-bottom:1px solid var(--hair)}
-.objective{display:grid;grid-template-columns:34px minmax(0,1fr);gap:4px 10px;padding-top:12px}
-.objective .arr{font-size:26px;line-height:1;color:var(--ink);font-weight:300}
-.objective p{font-size:17px;color:var(--body);margin-top:10px}
-@media (max-width:860px){.slide-head{grid-template-columns:1fr}}
-.slide-foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;color:var(--muted);padding-top:28px;margin-top:44px;border-top:1px solid var(--hair)}
-
-/* generic blocks */
-.block{padding-block:40px;border-bottom:1px solid var(--hair)}
-.block:last-of-type{border-bottom:0}
-.block-label{display:flex;justify-content:space-between;gap:12px;padding-top:12px;border-top:1.5px solid var(--ink);margin-bottom:26px;color:var(--ink)}
-.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px 56px}
-.two.wide-left{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
-@media (max-width:860px){.two,.two.wide-left{grid-template-columns:1fr}}
-.rows{list-style:none;margin:0;padding:0}
-.rows li{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px 12px;padding:16px 0;border-top:1px solid var(--hair)}
-.rows li:first-child{border-top:1px solid var(--ink)}
-.rows.plain li{grid-template-columns:minmax(0,1fr)}
-.rows .n{color:var(--muted);padding-top:4px}
-.rows h3{margin-bottom:4px}
-.rows p{font-size:15.5px}
-.rows .tag{justify-self:end;color:var(--ink)}
-.callout{background:var(--inv);color:var(--inv-fg);padding:18px 20px;display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;align-items:baseline}
-.callout b{font-weight:500;font-size:17px}
-.callout .mono{color:var(--inv-muted)}
-.note{font-size:13px;color:var(--muted);margin-top:14px;max-width:80ch}
-.btns{display:flex;gap:10px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:10px;font-family:var(--f-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;
-  text-decoration:none;padding:13px 18px;border:1px solid currentColor;border-radius:2px;cursor:pointer;background:transparent;color:inherit}
-.btn.solid{background:var(--cover-fg);color:var(--cover);border-color:var(--cover-fg)}
-.btn.ink{background:var(--inv);color:var(--inv-fg);border-color:var(--inv)}
-.btn:hover{opacity:.86}
-.link-arrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink);padding-bottom:2px}
-figure{margin:0}
-.diagram{overflow-x:auto}
-.diagram svg{display:block;width:100%;height:auto}
-svg text{font-family:var(--f-mono);letter-spacing:.12em}
-.s-ink{fill:var(--ink)} .s-body{fill:var(--body)} .s-muted{fill:var(--muted)} .s-paper{fill:var(--paper)} .s-box{fill:var(--paper-2)}
-.k-ink{stroke:var(--ink)} .k-muted{stroke:var(--muted)} .k-hair{stroke:var(--hair)}
-
-/* cover hero */
-.cover{background:var(--cover);color:var(--cover-fg);
-  margin-left:calc(-1 * max(16px,env(safe-area-inset-left,0px)));margin-right:calc(-1 * max(16px,env(safe-area-inset-right,0px)));
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.cover .wrap{padding-block:34px 30px}
-.cover .top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--cover-muted)}
-.cover-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:24px 40px;align-items:center;padding-block:28px 34px}
-.cover h1{color:var(--cover-fg);font-size:clamp(64px,11vw,148px);line-height:.86;letter-spacing:-.04em}
-.cover h1 .arrow{font-size:.42em;vertical-align:.08em;margin-left:.08em}
-.cover p{color:var(--cover-fg);opacity:.86;margin-top:26px;font-size:clamp(17px,1.7vw,20px);max-width:34ch}
-.cover .btns{margin-top:28px}
-.cover .btn{color:var(--cover-fg)}
-.cover .meta{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 24px;border-top:1px solid var(--cover-line);padding-top:18px}
-.cover .meta .mono{color:var(--cover-muted);display:block;margin-bottom:6px}
-.cover .meta div div{font-size:14px;color:var(--cover-fg)}
-.radar{max-width:440px;width:100%;justify-self:end}
-.radar .ring{fill:none;stroke:var(--cover-line);stroke-width:1}
-.radar .axis{stroke:var(--cover-line);stroke-width:1}
-.radar text{fill:var(--cover-muted);font-size:10px}
-.radar .hot{fill:var(--cover-fg)}
-.radar .brg{stroke:var(--cover-fg);stroke-width:1.5}
-.radar .sweep{fill:var(--cover-fg);opacity:.07;transform-origin:200px 200px}
-@media (prefers-reduced-motion:no-preference){
-  .radar .sweep{animation:sweep 6s linear infinite}
-  .radar .pulse{animation:pulse 2.4s ease-out infinite;transform-origin:310px 98px}
+.hdr{position:sticky;top:0;z-index:50;background:rgba(6,7,8,.74);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.hdr .wrap{display:flex;align-items:center;gap:32px;height:var(--head)}
+.logo{display:flex;align-items:center;gap:12px;color:var(--fg);text-decoration:none;font:500 13px/1 var(--mono);letter-spacing:.34em;flex:none}
+.logo svg{width:22px;height:22px}
+.nav{display:flex;align-items:center;gap:30px;margin-left:auto}
+.nav a:not(.btn){font:500 11.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:10px 0;position:relative;transition:color .2s}
+.nav a:not(.btn):hover,.nav a[aria-current=page]{color:var(--fg)}
+.nav a:not(.btn)[aria-current=page]::after{content:"";position:absolute;left:0;right:0;bottom:2px;height:1px;background:var(--signal)}
+.nav .btn[aria-current=page]{border-color:var(--signal)}
+.nav .btn{margin-left:6px}
+.menu{display:none;margin-left:auto;width:40px;height:40px;background:transparent;border:1px solid var(--line-2);color:var(--fg);cursor:pointer;align-items:center;justify-content:center}
+.menu span{display:block;width:16px;height:1px;background:currentColor;position:relative}
+.menu span::before,.menu span::after{content:"";position:absolute;left:0;width:16px;height:1px;background:currentColor;transition:transform .25s}
+.menu span::before{top:-5px}.menu span::after{top:5px}
+.menu[aria-expanded=true] span{background:transparent}
+.menu[aria-expanded=true] span::before{transform:translateY(5px) rotate(45deg)}
+.menu[aria-expanded=true] span::after{transform:translateY(-5px) rotate(-45deg)}
+.mnav{display:none}
+@media (max-width:820px){
+  .nav{display:none}.menu{display:inline-flex}
+  .mnav{display:block;position:fixed;left:0;right:0;top:calc(var(--head) + env(safe-area-inset-top,0px));bottom:0;z-index:49;background:var(--bg);padding:24px max(var(--gut),env(safe-area-inset-left,0px));
+    opacity:0;visibility:hidden;transform:translateY(-6px);transition:opacity .2s,transform .2s,visibility 0s .2s}
+  .mnav.open{opacity:1;visibility:visible;transform:none;transition:opacity .2s,transform .2s}
+  .mnav a{display:flex;justify-content:space-between;align-items:center;padding:20px 0;border-bottom:1px solid var(--line);color:var(--fg);text-decoration:none;font-size:26px;letter-spacing:-.02em}
+  .mnav a .mono{color:var(--muted)}
+  .mnav a[aria-current=page] .mono{color:var(--signal)}
 }
-@keyframes sweep{to{transform:rotate(360deg)}}
-@keyframes pulse{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.4);opacity:0}}
-@media (max-width:860px){.cover-grid{grid-template-columns:1fr}.radar{justify-self:start;max-width:340px}.cover .meta{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
-/* stats */
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;border-bottom:1px solid var(--hair)}
-.stat{padding:22px 20px 22px 0;border-right:1px solid var(--hair)}
-.stat+.stat{padding-left:20px}
-.stat:last-child{border-right:0}
-.stat .big{font-family:var(--f-display);font-weight:300;color:var(--ink);font-size:clamp(34px,4.2vw,52px);letter-spacing:-.03em;line-height:1}
-.stat .mono{display:block;margin:10px 0 6px;color:var(--ink)}
-.stat p{font-size:14px;color:var(--muted)}
-@media (max-width:860px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat:nth-child(2){border-right:0}.stat:nth-child(3){padding-left:0}.stat:nth-child(n+3){border-top:1px solid var(--hair)}}
+/* views */
+.view{animation:enter .45s ease both}
+@keyframes enter{from{opacity:0}to{opacity:1}}
+.sec{padding-block:clamp(72px,9vw,128px);border-top:1px solid var(--line)}
+.sec.tight{padding-block:clamp(56px,7vw,96px)}
+.sec-head{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px 64px;align-items:end;margin-bottom:clamp(40px,5vw,64px)}
+.sec-head h2{margin-top:20px;max-width:18ch}
+.sec-head p{max-width:42ch}
+@media (max-width:860px){.sec-head{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:40px 72px;align-items:start}
+.split h2{margin-top:20px}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
 
-.statement{font-family:var(--f-display);font-weight:300;color:var(--ink);font-size:clamp(28px,3.4vw,42px);line-height:1.08;letter-spacing:-.02em;text-wrap:balance;max-width:20ch}
-.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
-.step{padding:16px 18px 18px 0;border-top:1.5px solid var(--ink);position:relative}
-.step+.step{padding-left:18px;border-left:1px solid var(--hair)}
-.step .mono{color:var(--muted)}
-.step h3{margin:12px 0 6px;font-size:22px;font-weight:300}
-.step p{font-size:15px}
-@media (max-width:860px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}.step:nth-child(3){padding-left:0;border-left:0}}
-@media (max-width:520px){.steps{grid-template-columns:1fr}.step+.step{padding-left:0;border-left:0}}
-.cols3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
-.col{border-top:1px solid var(--ink);padding-top:14px}
-.col .mono{color:var(--muted)}
-.col h3{margin:10px 0 8px}
-.col p{font-size:15px}
-@media (max-width:860px){.cols3{grid-template-columns:1fr}}
-.band{background:var(--inv);color:var(--inv-fg);padding:34px 28px;display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-top:40px}
-.band h2{color:var(--inv-fg)}
-.band .btn{color:var(--inv-fg)}
-.band p{color:var(--inv-muted);margin-top:8px}
+/* background grid */
+.grid-bg{position:relative;isolation:isolate}
+.grid-bg::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:80px 80px;background-position:center top;
+  -webkit-mask-image:radial-gradient(ellipse 70% 80% at 68% 35%,#000 10%,transparent 72%);mask-image:radial-gradient(ellipse 70% 80% at 68% 35%,#000 10%,transparent 72%)}
+
+/* home hero */
+.hero{min-height:min(calc(100svh - var(--head)),940px);display:flex;flex-direction:column}
+.hero .wrap{flex:1;display:flex;flex-direction:column;width:100%}
+.hero-main{flex:1;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);align-items:center;gap:40px;padding-block:clamp(48px,7vw,88px)}
+.hero h1{margin-top:28px}
+.hero .lede{margin-top:28px}
+.hero .btns{margin-top:40px}
+.radar{width:100%;max-width:500px;justify-self:end}
+.radar .ring{fill:none;stroke:var(--line-2)}
+.radar .ax{stroke:var(--line)}
+.radar .tick{stroke:var(--line-2)}
+.radar .rt{fill:var(--muted);font:500 10px var(--mono);letter-spacing:.12em}
+.radar .rt.hi{fill:var(--signal)}
+.radar .node{fill:var(--fg)}
+.radar .tgt{fill:var(--signal)}
+.radar .brg{stroke:var(--signal);stroke-dasharray:3 5}
+.radar .sweep{transform-origin:240px 240px}
+.radar .ping{transform-origin:364px 124px;fill:none;stroke:var(--signal)}
+@media (prefers-reduced-motion:no-preference){
+  .radar .sweep{animation:spin 7s linear infinite}
+  .radar .ping{animation:ping 2.6s ease-out infinite}
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes ping{0%{transform:scale(.4);opacity:1}100%{transform:scale(3.2);opacity:0}}
+@media (max-width:900px){.hero-main{grid-template-columns:1fr}.radar{justify-self:start;max-width:360px}}
+
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line)}
+.metric{padding:28px 24px 32px 0}
+.metric+.metric{padding-left:24px;border-left:1px solid var(--line)}
+.metric b{display:block;font-weight:500;font-size:clamp(30px,3.3vw,46px);line-height:1;letter-spacing:-.04em;color:var(--fg)}
+.metric span{display:block;margin-top:14px;color:var(--muted)}
+.metrics-note{display:flex;justify-content:space-between;gap:16px;padding:0 0 28px;color:var(--muted)}
+@media (max-width:760px){
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metric:nth-child(3){padding-left:0;border-left:0}
+  .metric:nth-child(n+3){border-top:1px solid var(--line)}
+}
+
+/* lists, cards */
+.points{list-style:none;margin:0;padding:0;border-top:1px solid var(--line-2)}
+.points li{display:grid;grid-template-columns:56px minmax(0,1fr);gap:12px;padding:22px 0;border-bottom:1px solid var(--line);color:var(--fg);font-size:17px;line-height:1.45}
+.points .n{color:var(--muted);padding-top:3px}
+.points small{display:block;color:var(--fg-2);font-size:15px;margin-top:4px}
+.cards{display:grid;gap:1px;background:var(--line);border:1px solid var(--line)}
+.c4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.c3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.c2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:var(--bg);padding:28px 26px 32px;display:flex;flex-direction:column;transition:background .25s}
+.card:hover{background:var(--bg-1)}
+.card .top{display:flex;justify-content:space-between;gap:12px;color:var(--muted)}
+.card .top .hi{color:var(--signal)}
+.card h3{padding-top:72px}
+.card p{margin-top:10px;font-size:15.5px;line-height:1.55}
+.card.short h3{padding-top:36px}
+@media (max-width:1000px){.c4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.c3,.c2{grid-template-columns:1fr}}
+@media (max-width:760px){.card{padding:24px 22px 26px}.card h3,.card.short h3{padding-top:28px}}
+@media (max-width:560px){.c4{grid-template-columns:1fr}}
+
+/* figure */
+.fig{margin:0}
+.fig .frame{position:relative;overflow:hidden;background:var(--bg-2)}
+.fig img{width:100%;height:auto;aspect-ratio:1024/572;object-fit:cover;filter:saturate(.88) contrast(1.05)}
+.fig .frame::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(180deg,rgba(6,7,8,.28) 0%,transparent 26%,transparent 70%,rgba(6,7,8,.5) 100%)}
+.ov{position:absolute;z-index:2;color:var(--fg);font:500 10.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;background:rgba(6,7,8,.78);padding:6px 8px}
+.ov.tl{top:18px;left:18px}.ov.tr{top:18px;right:18px;text-align:right}.ov.bl{bottom:18px;left:18px}
+.ov .d{display:inline-block;width:6px;height:6px;background:var(--signal);margin-right:8px;vertical-align:1px}
+.reticle{position:absolute;z-index:2;left:44.5%;top:61.5%;width:11.5%;height:35%}
+.reticle .ov{top:0;left:calc(100% + 10px);white-space:nowrap;color:var(--signal)}
+.fig figcaption{display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;padding-top:16px;color:var(--muted)}
+@media (max-width:560px){.reticle .ov{display:none}.ov.tr{display:none}}
+a.feature{display:block;text-decoration:none;color:inherit}
+a.feature img{transition:transform 1.2s cubic-bezier(.2,.7,.2,1)}
+a.feature:hover img{transform:scale(1.02)}
+.feature-cap{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;padding-top:28px}
+.feature-cap h3{font-size:clamp(26px,2.6vw,36px);letter-spacing:-.03em;line-height:1.1}
+.feature-cap p{margin-top:8px}
+
+/* cta */
+.cta{display:flex;justify-content:space-between;align-items:end;gap:32px;flex-wrap:wrap;padding:clamp(32px,5vw,64px);background:var(--bg-1);border:1px solid var(--line)}
+.cta h2{max-width:16ch}
+.cta p{margin-top:16px}
+
+/* page hero */
+.phero{padding-block:clamp(72px,10vw,144px) clamp(56px,7vw,96px)}
+.phero h1{margin-top:28px;max-width:15ch}
+.phero .lede{margin-top:28px}
 
 /* mission */
-.mission-quote{font-family:var(--f-display);font-weight:300;color:var(--ink);font-size:clamp(30px,4vw,50px);line-height:1.06;letter-spacing:-.025em;max-width:24ch;text-wrap:balance}
-.formula{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-top:16px}
-.formula span.t{font-family:var(--f-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:8px 10px;border:1px solid var(--inv-line)}
-.formula span.op{color:var(--inv-muted)}
-.quote-card{border-top:1px solid var(--ink);padding-top:14px}
-.quote-card blockquote{margin:12px 0 0;font-size:18px;line-height:1.45;color:var(--ink);font-weight:300;font-family:var(--f-display)}
-.roadmap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative}
-.ms{padding:0 18px 0 0}
-.ms .dotline{display:flex;align-items:center;gap:0;margin-bottom:16px}
-.ms .dot{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--ink);background:var(--paper);flex:none}
-.ms.now .dot{background:var(--ink)}
-.ms .line{height:1.5px;background:var(--ink);flex:1}
-.ms:last-child .line{background:transparent}
-.ms .when{color:var(--ink)}
-.ms h3{margin:8px 0 6px}
-.ms p{font-size:14.5px}
-.ms .now-tag{display:inline-block;margin-left:8px;padding:2px 6px;background:var(--inv);color:var(--inv-fg)}
-@media (max-width:860px){.roadmap{grid-template-columns:1fr 1fr;gap:26px 0}}
-@media (max-width:520px){.roadmap{grid-template-columns:1fr}}
+.quote{font-size:clamp(30px,4.2vw,60px);line-height:1.04;letter-spacing:-.04em;color:var(--fg);font-weight:400;max-width:20ch;text-wrap:balance}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin-top:40px}
+.chain .k{padding:11px 14px;border:1px solid var(--line-2);color:var(--fg)}
+.chain .k.hi{border-color:var(--signal);color:var(--signal)}
+.chain .s{color:var(--muted)}
+.diagram{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);background:var(--bg-1);padding:20px}
+.diagram svg{width:100%;height:auto;min-width:720px}
+.dz{fill:var(--bg-2)} .dz2{fill:rgba(255,255,255,.035)}
+.dt{fill:var(--muted);font:500 10px var(--mono);letter-spacing:.12em}
+.dt.fg{fill:var(--fg)} .dt.hi{fill:var(--signal)}
+.dl{stroke:var(--line-2)} .dfl{stroke:var(--fg)}
+.dn{fill:var(--fg)} .dr{fill:var(--muted)}
+.db{stroke:var(--signal);stroke-dasharray:3 5;fill:none}
+.dx{stroke:var(--signal);stroke-width:2.2}
+.scope{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.scope>div{background:var(--bg);padding:32px 28px}
+.scope ul{list-style:none;margin:24px 0 0;padding:0}
+.scope li{display:flex;gap:14px;padding:13px 0;border-top:1px solid var(--line);color:var(--fg)}
+.scope li i{font-style:normal;font-family:var(--mono);color:var(--muted);width:14px;flex:none}
+.scope .yes li i{color:var(--signal)}
+@media (max-width:760px){.scope{grid-template-columns:1fr}}
+.timeline{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line-2)}
+.ms{position:relative;padding:28px 28px 0 0}
+.ms::before{content:"";position:absolute;top:-5px;left:0;width:9px;height:9px;background:var(--bg);border:1px solid var(--line-3)}
+.ms.now::before{background:var(--signal);border-color:var(--signal)}
+.ms .when{color:var(--muted)}
+.ms.now .when{color:var(--signal)}
+.ms h3{margin-top:14px}
+.ms p{margin-top:8px;font-size:15px}
+@media (max-width:860px){.timeline{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:40px}}
+@media (max-width:480px){.timeline{grid-template-columns:1fr}}
 
 /* product */
-.hero-fig img{display:block;width:100%;height:auto;border:1px solid var(--hair)}
-.hero-fig figcaption{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:10px;color:var(--muted)}
-.figure-pair{display:grid;grid-template-columns:1fr;gap:26px}
-.figure-pair figure img{display:block;width:100%;height:auto;border:1px solid var(--hair)}
-.figure-pair figcaption{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:10px;color:var(--muted)}
-.cards4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
-.card4{padding:18px 18px 22px 0;border-top:1.5px solid var(--ink)}
-.card4+.card4{padding-left:18px;border-left:1px solid var(--hair)}
-.card4 .mono{color:var(--muted)}
-.card4 h3{margin:12px 0 8px}
-.card4 p{font-size:15px}
-.card4 ul{margin:12px 0 0;padding-left:18px;font-size:14px;color:var(--body)}
-.card4 li{margin:4px 0}
-@media (max-width:980px){.cards4{grid-template-columns:repeat(2,minmax(0,1fr))}.card4:nth-child(3){padding-left:0;border-left:0}}
-@media (max-width:560px){.cards4{grid-template-columns:1fr}.card4+.card4{padding-left:0;border-left:0}}
+.stat-big{font-size:clamp(64px,8vw,120px);line-height:.9;letter-spacing:-.05em;color:var(--fg);font-weight:400}
+.stat-big+.mono{display:block;margin-top:16px;color:var(--muted)}
+.chart{border:1px solid var(--line);background:var(--bg-1);padding:24px}
+.chart svg{width:100%;height:auto}
+.ct{fill:var(--muted);font:500 10px var(--mono);letter-spacing:.12em}
+.ct.fg{fill:var(--fg)}
+.cb{fill:rgba(255,255,255,.18)} .cs{fill:var(--fg)} .cg{stroke:var(--line)}
+.ca{stroke:var(--signal);stroke-dasharray:2 4}
+.steps3{counter-reset:s}
 
 /* specs */
-.planner{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:28px 44px;align-items:start}
-@media (max-width:900px){.planner{grid-template-columns:1fr}}
-.map{border:1px solid var(--hair);background:var(--paper-2);padding:10px}
-.map svg{display:block;width:100%;height:auto}
-.control label{display:flex;justify-content:space-between;gap:12px;color:var(--ink)}
-.control input[type=range]{width:100%;margin:14px 0 6px;accent-color:var(--ink)}
-.scale{display:flex;justify-content:space-between;color:var(--muted)}
-.readouts{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:22px;border-top:1px solid var(--ink)}
-.readout{padding:14px 0;border-bottom:1px solid var(--hair)}
-.readout:nth-child(odd){padding-right:14px;border-right:1px solid var(--hair)}
-.readout:nth-child(even){padding-left:14px}
-.readout .v{font-family:var(--f-display);font-weight:300;font-size:34px;color:var(--ink);letter-spacing:-.02em;line-height:1.05}
-.readout .mono{color:var(--muted);display:block;margin-top:6px}
-.legend{display:flex;gap:16px 22px;flex-wrap:wrap;margin-top:12px;color:var(--muted)}
-.legend i{display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:-1px}
-.spec-groups{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:34px 56px}
-@media (max-width:860px){.spec-groups{grid-template-columns:1fr}}
-.spec h3{font-size:15px;font-family:var(--f-mono);font-weight:500;letter-spacing:.16em;text-transform:uppercase;padding-bottom:10px;border-bottom:1.5px solid var(--ink)}
+.specs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:56px 64px}
+@media (max-width:860px){.specs{grid-template-columns:1fr}}
+.spec h3{font:500 11.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:var(--muted);padding-bottom:16px;border-bottom:1px solid var(--line-2)}
 .spec dl{margin:0}
-.spec .r{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:4px 16px;padding:12px 0;border-bottom:1px solid var(--hair)}
-.spec dt{color:var(--muted);font-size:14.5px}
-.spec dd{margin:0;color:var(--ink);font-size:15px}
-.spec dd small{display:block;color:var(--muted);font-size:12.5px;margin-top:2px}
-@media (max-width:460px){.spec .r{grid-template-columns:1fr}}
+.spec .r{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:4px 20px;padding:15px 0;border-bottom:1px solid var(--line)}
+.spec dt{color:var(--muted);font-size:15px}
+.spec dd{margin:0;color:var(--fg);font-size:15px}
+.spec dd small{display:block;color:var(--muted);font-size:13px;margin-top:3px}
+@media (max-width:420px){.spec .r{grid-template-columns:1fr}}
+.planner{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr);gap:48px;align-items:start}
+@media (max-width:920px){.planner{grid-template-columns:1fr}}
+.map{background:var(--bg-1);border:1px solid var(--line);padding:clamp(10px,2vw,20px)}
+.map svg{width:100%;height:auto}
+.gl{stroke:var(--line)} .gb{stroke:var(--line-3);fill:none}
+.gn{fill:var(--muted)} .gw{fill:var(--fg)}
+.gbr{stroke:var(--signal);stroke-dasharray:3 5}
+.gfx{stroke:var(--signal);fill:none}
+.gt{fill:var(--muted);font:500 10px var(--mono);letter-spacing:.12em}
+.gt.hi{fill:var(--signal)} .gt.fg{fill:var(--fg)}
+.legend{display:flex;gap:12px 24px;flex-wrap:wrap;margin-top:16px;color:var(--muted)}
+.legend i{display:inline-block;width:8px;height:8px;margin-right:8px;vertical-align:0}
+.ctrl label{display:flex;justify-content:space-between;gap:12px;color:var(--fg)}
+.ctrl output{color:var(--signal)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;margin:18px 0 8px;background:transparent;cursor:pointer}
+input[type=range]::-webkit-slider-runnable-track{height:1px;background:var(--line-3)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;margin-top:-6.5px;background:var(--fg);border:0}
+input[type=range]::-moz-range-track{height:1px;background:var(--line-3)}
+input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--fg);border:0;border-radius:0}
+.scale{display:flex;justify-content:space-between;color:var(--muted)}
+.readouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);margin-top:28px}
+.readout{background:var(--bg);padding:20px 18px}
+.readout .v{font-size:clamp(28px,3vw,38px);line-height:1;letter-spacing:-.035em;color:var(--fg)}
+.readout .mono{display:block;margin-top:10px;color:var(--muted)}
+.fine{font-size:13.5px;color:var(--muted);margin-top:20px;max-width:60ch}
 
 /* team */
-.team{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:44px 48px}
-.member{border-top:1.5px solid var(--ink);padding-top:22px}
-.member img{width:100%;max-width:460px;aspect-ratio:1/1;height:auto;object-fit:cover;display:block;filter:grayscale(1) contrast(1.04);transition:filter .3s ease;background:var(--paper-2)}
-.member:hover img{filter:none}
-.member .role{display:block;color:var(--ink);margin-top:20px}
-.member h3{font-family:var(--f-display);font-weight:300;font-size:clamp(28px,3vw,36px);letter-spacing:-.02em;margin:8px 0 4px}
-.member .deg{color:var(--muted);font-size:14.5px}
-.member p.bio{font-size:16px;margin-top:12px;max-width:46ch}
-.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-.chip{font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;padding:4px 7px;border:1px solid var(--hair);color:var(--muted)}
-@media (max-width:640px){.team{grid-template-columns:1fr}.member img{max-width:none}}
+.team{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:64px 32px}
+.member .ph{position:relative;aspect-ratio:1/1;overflow:hidden;background:var(--bg-2)}
+.member img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.05) brightness(.94);transition:filter .5s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
+.member:hover img{filter:grayscale(0) contrast(1.02);transform:scale(1.02)}
+.member .ph .ov{bottom:16px;left:16px;top:auto}
+.member .who{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;padding-top:24px}
+.member h3{font-size:clamp(24px,2.4vw,32px);letter-spacing:-.03em}
+.member .role{color:var(--signal)}
+.member .deg{display:block;color:var(--muted);margin-top:10px}
+.member p{margin-top:14px;font-size:15.5px;max-width:44ch}
+@media (max-width:600px){.team{grid-template-columns:1fr;gap:48px}}
+.tags{display:flex;flex-wrap:wrap;gap:8px}
+.tags span{padding:10px 14px;border:1px solid var(--line-2);color:var(--fg)}
 
 /* contact */
-.form{display:grid;gap:16px}
-.field{display:grid;gap:6px}
-.field label{color:var(--ink)}
-.field input,.field select,.field textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1px solid var(--hair);border-radius:2px;padding:12px 12px;width:100%}
-.field textarea{min-height:150px;resize:vertical}
-.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--focus);outline-offset:1px;border-color:var(--ink)}
-.field .err{color:var(--err);font-size:13px;min-height:0}
-.field.bad input,.field.bad textarea{border-color:var(--err)}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media (max-width:560px){.row2{grid-template-columns:1fr}}
-.status{font-size:14.5px;padding:12px 14px;border:1px solid var(--hair);display:none}
-.status.show{display:block}
-.status.ok{border-color:var(--ok);color:var(--ok)}
-.status.bad{border-color:var(--err);color:var(--err)}
-details{border-top:1px solid var(--hair);padding:14px 0}
-details:first-of-type{border-top:1px solid var(--ink)}
-summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:12px;color:var(--ink);font-size:17px}
+.contacts{list-style:none;margin:0;padding:0;border-top:1px solid var(--line-2)}
+.contacts li{display:flex;justify-content:space-between;align-items:center;gap:12px 24px;flex-wrap:wrap;padding:22px 0;border-bottom:1px solid var(--line)}
+.contacts h3{font-size:18px}
+.contacts .mono{display:block;color:var(--muted);margin-top:6px}
+.addr{display:flex;align-items:center;gap:12px;min-width:0}
+.addr a{color:var(--fg);text-decoration:none;font-size:16px;border-bottom:1px solid var(--line-2);padding-bottom:2px;overflow-wrap:anywhere;transition:border-color .2s}
+.addr a:hover{border-color:var(--signal)}
+.copy{height:32px;padding:0 12px;background:transparent;color:var(--muted);border:1px solid var(--line-2);cursor:pointer;transition:color .2s,border-color .2s}
+.copy:hover{color:var(--fg);border-color:var(--line-3)}
+details{border-bottom:1px solid var(--line)}
+.faq{border-top:1px solid var(--line-2)}
+summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;padding:22px 0;color:var(--fg);font-size:17px}
 summary::-webkit-details-marker{display:none}
-summary::after{content:"+";font-family:var(--f-mono);color:var(--muted)}
-details[open] summary::after{content:"–"}
-details p{margin-top:10px;font-size:15px}
-.inbox{margin-top:40px}
-.msg{border-top:1px solid var(--hair);padding:14px 0;display:grid;gap:6px}
-.msg .meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted)}
-.msg p{white-space:pre-wrap;color:var(--ink);font-size:15px}
+summary::after{content:"+";font:400 20px/1 var(--mono);color:var(--muted);transition:transform .25s}
+details[open] summary::after{transform:rotate(45deg);color:var(--signal)}
+details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
 
-.site-foot{border-top:1px solid var(--hair);margin-top:10px;padding-block:28px 40px;color:var(--muted)}
-.site-foot .wrap{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:baseline}
-.site-foot nav{display:flex;gap:14px;flex-wrap:wrap}
-.site-foot a{text-decoration:none}
-.site-foot a:hover{color:var(--ink)}
+/* footer */
+.ftr{border-top:1px solid var(--line);padding-block:56px calc(40px + env(safe-area-inset-bottom,0px))}
+.ftr-top{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;align-items:start}
+.ftr-top p{margin-top:16px;max-width:34ch;color:var(--muted)}
+.ftr nav{display:flex;gap:12px 28px;flex-wrap:wrap}
+.ftr nav a{color:var(--fg-2);text-decoration:none;transition:color .2s}
+.ftr nav a:hover{color:var(--fg)}
+.ftr-bot{display:flex;justify-content:space-between;gap:12px 24px;flex-wrap:wrap;margin-top:56px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted)}
 
-.contacts{list-style:none;margin:0;padding:0}
-.contacts li{display:flex;justify-content:space-between;align-items:center;gap:10px 20px;flex-wrap:wrap;padding:16px 0;border-top:1px solid var(--hair)}
-.contacts li:first-child{border-top:1px solid var(--ink)}
-.contacts .who{min-width:0}
-.contacts h3{margin-bottom:4px}
-.contacts .addr{display:flex;align-items:center;gap:10px;min-width:0}
-.contacts .addr a{color:var(--ink);font-size:16px;text-decoration:none;border-bottom:1px solid var(--hair);user-select:all;overflow-wrap:anywhere}
-.contacts .addr a:hover{border-color:var(--ink)}
-.copy{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;background:transparent;color:var(--muted);border:1px solid var(--hair);border-radius:2px;padding:6px 9px;cursor:pointer}
-.copy:hover{color:var(--ink);border-color:var(--ink)}
+@media (max-width:560px){.ct{font-size:16px}.gt{font-size:14px}.radar .rt{font-size:12.5px}}
+/* reveal */
+.js [data-r]{opacity:0;transform:translateY(14px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.7,.2,1)}
+.js [data-r].in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){.js [data-r]{opacity:1;transform:none;transition:none}.view{animation:none}}
 </style>
 </head>
 <body>
-<header class="site-head">
-  <div class="wrap head-row">
-    <a class="brand" href="#home" data-go="home"><b>ATHENE</b><span>LISTENING NODE</span></a>
+<header class="hdr">
+  <div class="wrap">
+    <a class="logo" href="#home" data-go="home" aria-label="ATHENE home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 20 19H4Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="14" r="2" fill="#FF8A3D"/></svg>
+      ATHENE
+    </a>
     <nav class="nav" aria-label="Main">
       <a href="#mission" data-go="mission">Mission</a>
       <a href="#product" data-go="product">Product</a>
       <a href="#specs" data-go="specs">Specs</a>
       <a href="#team" data-go="team">Team</a>
-      <a href="#contact" data-go="contact" class="cta">Contact</a>
+      <a href="#contact" data-go="contact" class="btn sm">Contact</a>
     </nav>
+    <button class="menu" type="button" aria-label="Menu" aria-expanded="false" aria-controls="mnav"><span></span></button>
   </div>
 </header>
+<nav class="mnav" id="mnav" aria-label="Mobile">
+  <a href="#mission" data-go="mission">Mission <span class="mono">01</span></a>
+  <a href="#product" data-go="product">Product <span class="mono">02</span></a>
+  <a href="#specs" data-go="specs">Specs <span class="mono">03</span></a>
+  <a href="#team" data-go="team">Team <span class="mono">04</span></a>
+  <a href="#contact" data-go="contact">Contact <span class="mono">05</span></a>
+</nav>
 
 <main>
-<!-- ============================== HOME ============================== -->
-<section class="view-home" data-view="home" id="home">
-  <div class="cover">
+<!-- ======================= HOME ======================= -->
+<section class="view" data-view="home" data-title="ATHENE — Passive acoustic UAS detection">
+  <div class="hero grid-bg">
     <div class="wrap">
-      <div class="top mono"><span>TEAM ATHENE</span><span>UAS DETECTION AT SOURCE</span></div>
-      <div class="cover-grid">
+      <div class="hero-main">
         <div>
-          <h1>Listening<br>Node<span class="arrow" aria-hidden="true">↘</span></h1>
-          <p>A cheap, passive sensor that hears drones at launch and points to where they came from.</p>
+          <span class="eyebrow mono">Passive acoustic UAS detection</span>
+          <h1 class="d1">Hear the drone.<br>Find the launch.</h1>
+          <p class="lede">Low-cost listening nodes that detect drones at take-off and point to where they came from.</p>
           <div class="btns">
-            <a class="btn solid" href="#product" data-go="product">See the node <span aria-hidden="true">→</span></a>
-            <a class="btn" href="#contact" data-go="contact">Talk to us</a>
+            <a class="btn primary" href="#product" data-go="product">Explore the node <span class="ar" aria-hidden="true">→</span></a>
+            <a class="btn" href="#contact" data-go="contact">Contact us</a>
           </div>
         </div>
-        <svg class="radar" viewBox="0 0 400 400" role="img" aria-label="A node at the center of range rings hears a drone at bearing 047 degrees">
-          <path class="sweep" d="M200 200 L200 12 A188 188 0 0 1 333 67 Z"/>
-          <circle class="ring" cx="200" cy="200" r="62"/>
-          <circle class="ring" cx="200" cy="200" r="112"/>
-          <circle class="ring" cx="200" cy="200" r="160"/>
-          <circle class="ring" cx="200" cy="200" r="188"/>
-          <line class="axis" x1="200" y1="8" x2="200" y2="392"/>
-          <line class="axis" x1="8" y1="200" x2="392" y2="200"/>
-          <line class="brg" x1="200" y1="200" x2="310" y2="98"/>
-          <circle class="hot pulse" cx="310" cy="98" r="7" opacity=".5"/>
-          <circle class="hot" cx="310" cy="98" r="5"/>
-          <rect class="hot" x="195" y="195" width="10" height="10"/>
-          <text x="322" y="78">DRONE</text>
-          <text x="322" y="92">BRG 047°</text>
-          <text x="184" y="226">NODE</text>
-          <text x="206" y="24">N</text>
+        <svg class="radar" viewBox="0 0 480 480" role="img" aria-label="A listening node at the center of range rings detects a drone at bearing 047 degrees">
+          <defs>
+            <linearGradient id="sw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF8A3D" stop-opacity="0"/><stop offset="1" stop-color="#FF8A3D" stop-opacity=".16"/></linearGradient>
+          </defs>
+          <circle class="ring" cx="240" cy="240" r="60"/><circle class="ring" cx="240" cy="240" r="120"/><circle class="ring" cx="240" cy="240" r="180"/><circle class="ring" cx="240" cy="240" r="228"/>
+          <line class="ax" x1="240" y1="8" x2="240" y2="472"/><line class="ax" x1="8" y1="240" x2="472" y2="240"/>
+          <g class="tick"><line x1="240" y1="12" x2="240" y2="24"/><line x1="468" y1="240" x2="456" y2="240"/><line x1="240" y1="468" x2="240" y2="456"/><line x1="12" y1="240" x2="24" y2="240"/></g>
+          <path class="sweep" d="M240 240 L240 12 A228 228 0 0 1 401 79 Z" fill="url(#sw)"/>
+          <line class="brg" x1="240" y1="240" x2="364" y2="124"/>
+          <circle class="ping" cx="364" cy="124" r="6"/>
+          <circle class="tgt" cx="364" cy="124" r="4.5"/>
+          <rect class="node" x="235" y="235" width="10" height="10"/>
+          <text class="rt hi" x="378" y="106">UAS</text>
+          <text class="rt" x="378" y="121">BRG 047°</text>
+          <text class="rt" x="222" y="268">NODE</text>
+          <text class="rt" x="248" y="34">N</text>
+          <text class="rt" x="248" y="186">100 M</text>
+          <text class="rt" x="248" y="66">300 M</text>
         </svg>
       </div>
-      <div class="meta">
-        <div><span class="mono">Product</span><div>Listening Node</div></div>
-        <div><span class="mono">Field</span><div>5 km × 5 km grid</div></div>
-        <div><span class="mono">Signature</span><div>Listens only</div></div>
-        <div><span class="mono">Stage</span><div>Prototype, fall 2026</div></div>
+      <div class="metrics tab" data-r>
+        <div class="metric"><b>25 km²</b><span class="mono">Covered per field</span></div>
+        <div class="metric"><b>72 h</b><span class="mono">Unattended</span></div>
+        <div class="metric"><b>&lt;$1k</b><span class="mono">Per node</span></div>
+        <div class="metric"><b>0</b><span class="mono">Emissions while listening</span></div>
       </div>
+      <div class="metrics-note mono"><span>Design targets</span><span>Prototype · Fall 2026</span></div>
     </div>
   </div>
 
-  <div class="wrap">
-    <div class="stats tabular" aria-label="Design targets">
-      <div class="stat"><div class="big">5 × 5 km</div><span class="mono">Per field</span><p>One deployment covers a 25 km² grid.</p></div>
-      <div class="stat"><div class="big">72 h</div><span class="mono">Unattended</span><p>Air-dropped node on one battery.</p></div>
-      <div class="stat"><div class="big">&lt; $1,000</div><span class="mono">Per node</span><p>Commercial parts, built to be expendable.</p></div>
-      <div class="stat"><div class="big">0</div><span class="mono">Emissions while listening</span><p>It only transmits to report a drone.</p></div>
-    </div>
-    <p class="note mono">Design targets · prototype in development</p>
-
-    <div class="block">
-      <div class="block-label mono"><span>The gap</span><span class="muted">Why ATHENE</span></div>
-      <div class="two">
-        <p class="statement">Air defense finds drones in the air. Nobody owns finding where they launch.</p>
-        <ul class="rows plain">
-          <li><div><h3>Launches happen out of reach</h3><p>Group 2–3 drones launch 5–35 km behind the enemy line, beyond what rear-area sensors can hear.</p></div></li>
-          <li><div><h3>Radio sensors miss quiet drones</h3><p>Fiber-optic and pre-programmed drones give off no radio signal for a scanner to find.</p></div></li>
-          <li><div><h3>No one maps the launches</h3><p>No fielded system turns launches into a picture of where, how many and how often.</p></div></li>
-        </ul>
+  <div class="sec">
+    <div class="wrap split">
+      <div data-r>
+        <span class="eyebrow mono">The gap</span>
+        <h2>Air defense finds drones in the air. No one finds where they launch.</h2>
       </div>
-    </div>
-
-    <div class="block">
-      <div class="block-label mono"><span>How it works</span><a class="link-arrow" href="#product" data-go="product">The node →</a></div>
-      <div class="steps">
-        <div class="step"><span class="mono">01</span><h3>Hear</h3><p>Four microphones pick up the hum of a propeller or engine.</p></div>
-        <div class="step"><span class="mono">02</span><h3>Think</h3><p>The node checks that it is a drone and works out which way it is.</p></div>
-        <div class="step"><span class="mono">03</span><h3>Stamp</h3><p>GPS adds the exact time and place to every detection.</p></div>
-        <div class="step"><span class="mono">04</span><h3>Share</h3><p>A short report goes to a gateway node, which sends one track home.</p></div>
-      </div>
-    </div>
-
-    <div class="block">
-      <div class="block-label mono"><span>Who it's for</span><span class="muted">Three problems we are testing</span></div>
-      <div class="cols3">
-        <div class="col"><span class="mono">Military</span><h3>Brigades and divisions</h3><p>A launch-site cue for the targeting cell and a daily map of enemy drone activity, for Army and Marine Corps units.</p></div>
-        <div class="col"><span class="mono">Border</span><h3>Border security</h3><p>Find drones and their launch points along approach corridors, including drones that radio sensors miss.</p></div>
-        <div class="col"><span class="mono">Homeland</span><h3>Homeland agencies</h3><p>Locate where cross-border drones take off. A passive sensor avoids most radio-spectrum restrictions.</p></div>
-      </div>
-    </div>
-
-    <div class="band">
-      <div><h2>We are testing with users this fall.</h2><p>Operators, engineers and test ranges: we want to hear from you.</p></div>
-      <a class="btn" href="#contact" data-go="contact">Get in touch <span aria-hidden="true">→</span></a>
-    </div>
-
-    <div class="slide-foot mono"><span>Team Athene · UAS detection at source · October 2026</span><span class="tabular">01 / 06</span></div>
-  </div>
-</section>
-
-<!-- ============================== MISSION ============================== -->
-<section class="view wrap" data-view="mission" id="mission" hidden>
-  <div class="slide-top mono"><span>02 &nbsp;Mission &nbsp;/ &nbsp;Overview</span><span class="muted">Athene &nbsp;/ &nbsp;Listening node</span></div>
-  <div class="slide-head">
-    <h1>Find the launch,<br>not just the drone</h1>
-    <div class="objective"><span class="arr" aria-hidden="true">↘</span><div><span class="mono muted">Objective</span><p>Why ATHENE exists, the problem we are solving, and where the project goes next.</p></div></div>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>Our mission</span></div>
-    <div class="two wide-left">
-      <p class="mission-quote">Give ground forces an early, passive warning of where enemy drones launch, so they can act before the next wave.</p>
-      <div>
-        <ul class="rows plain">
-          <li><div><h3>The aim</h3><p>A low-cost, easy-to-use system that goes from sensor to decision, works up to 50 km out, and covers a 5 km × 5 km square.</p></div></li>
-          <li><div><h3>What we build</h3><p>An acoustic listening node and the way it is delivered, a mission planning tool, a detection and decision platform, and a draft field doctrine.</p></div></li>
-          <li><div><h3>What we do not do</h3><p>Close-in detection under 3 km, radar or camera sensors, and weapons. ATHENE finds and reports; other systems act.</p></div></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="callout" style="display:block">
-      <span class="mono">The air-war lesson</span>
-      <p style="margin-top:10px;font-size:20px;max-width:none;color:var(--inv-fg);font-family:var(--f-display);font-weight:300">Aircraft in the air are hard to find. Air forces were beaten on the ground.</p>
-      <div class="formula" aria-label="Find air bases plus destroy the runway plus destroy the aircraft equals deny enemy air power">
-        <span class="t">Find air bases</span><span class="op">+</span><span class="t">Destroy runway</span><span class="op">+</span><span class="t">Destroy aircraft</span><span class="op">=</span><span class="t">Deny air power</span>
-      </div>
-      <p style="margin-top:14px;color:var(--inv-muted);max-width:70ch">Drones are the same. Find where they launch, and you can stop the next wave before it is in the air.</p>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>Problem statements</span><span class="muted">Hypotheses under test</span></div>
-    <div class="two">
-      <div class="quote-card"><span class="mono muted">01 · Military operations · US Army and USMC</span>
-        <blockquote>“Manoeuvre brigades and divisions struggle to find and neutralize enemy Group 2–3 drone launch sites 5–35 km deep in their area of operations. This puts our forces at high risk and slows manoeuvre.”</blockquote></div>
-      <div class="quote-card"><span class="mono muted">02 · Border security · US Border Patrol</span>
-        <blockquote>“Border Patrol struggles to intercept drones at the US–Mexico border and to locate launch points and operators after a drone turns back, so threat drones get through.”</blockquote></div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>Our approach: sense forward</span><span class="muted">Not to scale</span></div>
-    <div class="diagram">
-      <svg viewBox="0 0 960 260" style="min-width:720px" role="img" aria-label="Rear-area sensors sit behind our troops. ATHENE nodes sit forward of the front line, 0 to 10 km out, listening toward enemy launch sites 10 to 35 km deep.">
-        <rect class="s-box" x="0" y="40" width="250" height="150"/>
-        <rect class="s-box" x="250" y="40" width="130" height="150" opacity=".6"/>
-        <line class="k-ink" x1="380" y1="24" x2="380" y2="206" stroke-width="2"/>
-        <text class="s-ink" x="386" y="34" font-size="11">FLOT</text>
-        <text class="s-muted" x="12" y="62" font-size="10">FRIENDLY REAR</text>
-        <text class="s-muted" x="262" y="62" font-size="10">OUR TROOPS</text>
-        <text class="s-muted" x="392" y="62" font-size="10">0–5 KM</text>
-        <text class="s-muted" x="540" y="62" font-size="10">5–10 KM</text>
-        <text class="s-muted" x="690" y="62" font-size="10">10–35 KM · LAUNCH ECHELONS</text>
-        <line class="k-hair" x1="530" y1="44" x2="530" y2="190" stroke-dasharray="4 4"/>
-        <line class="k-hair" x1="680" y1="44" x2="680" y2="190" stroke-dasharray="4 4"/>
-        <g class="s-muted"><circle cx="60" cy="120" r="5"/><circle cx="140" cy="150" r="5"/><circle cx="210" cy="105" r="5"/></g>
-        <g class="k-ink" stroke-width="1" stroke-dasharray="3 4" fill="none">
-          <line x1="430" y1="110" x2="800" y2="96"/><line x1="470" y1="160" x2="800" y2="96"/><line x1="560" y1="128" x2="800" y2="96"/>
-          <line x1="560" y1="128" x2="880" y2="162"/><line x1="470" y1="160" x2="880" y2="162"/>
-        </g>
-        <g class="s-ink"><rect x="424" y="104" width="12" height="12"/><rect x="464" y="154" width="12" height="12"/><rect x="554" y="122" width="12" height="12"/><rect x="508" y="84" width="12" height="12"/></g>
-        <g class="k-ink" stroke-width="2.5"><path d="M792 88 L808 104 M808 88 L792 104"/><path d="M872 154 L888 170 M888 154 L872 170"/></g>
-        <text class="s-ink" x="814" y="92" font-size="10">LAUNCH SITE</text>
-        <text class="s-ink" x="894" y="158" font-size="10">SITE</text>
-        <rect class="s-muted" x="12" y="222" width="10" height="10"/><text class="s-muted" x="30" y="231" font-size="10">REAR-AREA SENSOR</text>
-        <rect class="s-ink" x="200" y="222" width="10" height="10"/><text class="s-ink" x="218" y="231" font-size="10">ATHENE NODE</text>
-        <path class="k-ink" d="M352 222 L362 232 M362 222 L352 232" stroke-width="2"/><text class="s-ink" x="370" y="231" font-size="10">ENEMY LAUNCH SITE</text>
-        <line class="k-ink" x1="560" y1="227" x2="590" y2="227" stroke-dasharray="3 4"/><text class="s-ink" x="598" y="231" font-size="10">BEARING TO SOURCE</text>
-      </svg>
-    </div>
-    <div class="cols3" style="margin-top:26px">
-      <div class="col"><span class="mono">Why forward</span><p style="margin-top:8px">Group 2–3 drones launch 5–35 km behind the enemy line, beyond what rear-area sensors can hear.</p></div>
-      <div class="col"><span class="mono">How they get there</span><p style="margin-top:8px">Placed by a recon team, or dropped by a carrier drone. Bearings cross to fix the launch area.</p></div>
-      <div class="col"><span class="mono">What they must be</span><p style="margin-top:8px">Passive, hard to spot, days unattended, meshed together, and under $1,000 a node.</p></div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>Why acoustic</span><span class="muted">UAS are not silent</span></div>
-    <ul class="rows plain">
-      <li><div><h3>Drones are loud at launch</h3><p>Engines and propellers make sound even when a drone has no radio link and a small radar cross-section.</p></div></li>
-      <li><div><h3>Acoustic detection works at scale</h3><p>Ukraine's Sky Fortress network reportedly uses about 15,000 acoustic nodes to hear drones in flight across its rear area.</p></div></li>
-      <li><div><h3>The launch site is the gap</h3><p>No system gives persistent detection of launch sites 5–35 km behind the line, or maps how many drones are launched and how often.</p></div></li>
-    </ul>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>Roadmap · fall 2026</span><span class="muted">Ten-week sprint</span></div>
-    <div class="roadmap">
-      <div class="ms now"><div class="dotline"><span class="dot"></span><span class="line"></span></div><span class="mono when">By 31 Oct<span class="now-tag">Now</span></span><h3>Stakeholders</h3><p>Map stakeholders. Interview end users and innovation leads.</p></div>
-      <div class="ms now"><div class="dotline"><span class="dot"></span><span class="line"></span></div><span class="mono when">By 31 Oct</span><h3>Problems</h3><p>Write problem statements and validate them with a champion.</p></div>
-      <div class="ms"><div class="dotline"><span class="dot"></span><span class="line"></span></div><span class="mono when">By 21 Nov</span><h3>Hypothesis</h3><p>Build the audio prototype within budget, plus a digital twin of the field.</p></div>
-      <div class="ms"><div class="dotline"><span class="dot"></span><span class="line"></span></div><span class="mono when">By 7 Dec</span><h3>Solution</h3><p>Proof-of-concept demo to an end user.</p></div>
-    </div>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>How we will measure success</span></div>
-    <ul class="rows plain">
-      <li><div><h3>Sensors that work</h3><p>Three audio sensors run for 24 hours and detect a Group 2 launch.</p></div></li>
-      <li><div><h3>A planning tool soldiers can use</h3><p>It loads military maps with terrain and vegetation, flags likely take-off sites and suggests where to place nodes.</p></div></li>
-      <li><div><h3>A platform that learns</h3><p>It tracks nodes from delivery onward, detects launches, learns from false alarms and gives a location and target solution.</p></div></li>
-      <li><div><h3>A sponsor</h3><p>A US Army or Marine Corps partner sponsors the project.</p></div></li>
-    </ul>
-  </div>
-
-  <div class="slide-foot mono"><span>Team Athene · UAS detection at source · October 2026</span><span class="tabular">02 / 06</span></div>
-</section>
-
-<!-- ============================== PRODUCT ============================== -->
-<section class="view wrap" data-view="product" id="product" hidden>
-  <div class="slide-top mono"><span>03 &nbsp;Product &nbsp;/ &nbsp;The node</span><span class="muted">Athene &nbsp;/ &nbsp;Listening node</span></div>
-  <div class="slide-head">
-    <h1>The Listening<br>Node</h1>
-    <div class="objective"><span class="arr" aria-hidden="true">↘</span><div><span class="mono muted">Objective</span><p>What one node does, how it saves power, and how it gets to the field.</p></div></div>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>One node in one picture</span></div>
-    <div class="two wide-left">
-      <div class="diagram">
-        <svg viewBox="0 0 620 330" style="min-width:520px" role="img" aria-label="Four mics feed an always-on chip with a 30-second memory. The chip wakes the Raspberry Pi, which sends reports through the radio and GPS. A battery powers everything.">
-          <rect class="s-box k-ink" x="10" y="40" width="140" height="70" stroke-width="1.2"/>
-          <text class="s-ink" x="80" y="72" text-anchor="middle" font-size="12">4 MICS</text>
-          <text class="s-muted" x="80" y="92" text-anchor="middle" font-size="9.5">THE EARS</text>
-          <rect class="s-ink" x="200" y="30" width="200" height="90"/>
-          <text class="s-paper" x="300" y="68" text-anchor="middle" font-size="12">SENTRY CHIP</text>
-          <text class="s-paper" x="300" y="88" text-anchor="middle" font-size="9.5" opacity=".75">ALWAYS ON · ≈ 0.2 W</text>
-          <rect class="s-box k-ink" x="450" y="40" width="160" height="70" stroke-width="1.2"/>
-          <text class="s-ink" x="530" y="72" text-anchor="middle" font-size="12">MEMORY</text>
-          <text class="s-muted" x="530" y="92" text-anchor="middle" font-size="9.5">LAST 30 S OF SOUND</text>
-          <rect class="s-box k-ink" x="200" y="190" width="200" height="90" stroke-width="1.2" stroke-dasharray="5 4"/>
-          <text class="s-ink" x="300" y="228" text-anchor="middle" font-size="12">RASPBERRY PI</text>
-          <text class="s-muted" x="300" y="248" text-anchor="middle" font-size="9.5">OFF UNTIL WOKEN</text>
-          <rect class="s-box k-ink" x="450" y="200" width="160" height="70" stroke-width="1.2"/>
-          <text class="s-ink" x="530" y="232" text-anchor="middle" font-size="12">RADIO + GPS</text>
-          <text class="s-muted" x="530" y="252" text-anchor="middle" font-size="9.5">THE VOICE</text>
-          <rect class="s-box k-ink" x="10" y="200" width="140" height="70" stroke-width="1.2"/>
-          <text class="s-ink" x="80" y="232" text-anchor="middle" font-size="12">BATTERY</text>
-          <text class="s-muted" x="80" y="252" text-anchor="middle" font-size="9.5">3 DAYS · ≈ 0.15 KG</text>
-          <g class="k-ink" stroke-width="1.4" fill="none">
-            <path d="M150 75 H194"/><path d="M188 69 L196 75 L188 81"/>
-            <path d="M400 75 H444"/><path d="M438 69 L446 75 L438 81"/>
-            <path d="M270 120 V184"/><path d="M264 178 L270 186 L276 178"/>
-            <path d="M500 110 L380 184"/><path d="M379 176 L378 186 L388 184"/>
-            <path d="M400 235 H444"/><path d="M438 229 L446 235 L438 241"/>
-            <path d="M150 235 H194" stroke-dasharray="3 4"/>
-          </g>
-          <text class="s-ink" x="280" y="156" font-size="9.5">1 WAKE</text>
-          <text class="s-ink" x="452" y="150" font-size="9.5">2 SAVED SOUND</text>
-          <text class="s-muted" x="156" y="226" font-size="9">POWER</text>
-          <text class="s-muted" x="10" y="318" font-size="9.5">BRAIN AND MICS ONLY · ESTIMATE</text>
-        </svg>
-      </div>
-      <ol class="rows">
-        <li><span class="mono n">01</span><div><h3>Listen</h3><p>A low-power chip checks the four mics 30 times a second for the comb-shaped hum of a propeller.</p></div></li>
-        <li><span class="mono n">02</span><div><h3>Remember</h3><p>It always keeps the last 30 seconds of sound, so the start of a pass is never lost.</p></div></li>
-        <li><span class="mono n">03</span><div><h3>Wake</h3><p>On a hit, it switches on the Raspberry Pi and keeps recording while the Pi boots.</p></div></li>
-        <li><span class="mono n">04</span><div><h3>Confirm and report</h3><p>The Pi finds the direction and drone type, sends a 30-byte report and powers off.</p></div></li>
+      <ol class="points" data-r>
+        <li><span class="mono n">01</span><div>Launches happen 5–35 km behind the line.<small>Beyond the reach of rear-area sensors.</small></div></li>
+        <li><span class="mono n">02</span><div>Many drones emit no radio signal.<small>Fiber-optic and pre-programmed drones are invisible to RF scanners.</small></div></li>
+        <li><span class="mono n">03</span><div>No fielded system maps launch activity.<small>Where, how many and how often.</small></div></li>
       </ol>
     </div>
   </div>
 
-  <div class="block">
-    <div class="block-label mono"><span>The two-stage brain</span><span class="muted">Like a smart speaker</span></div>
-    <div class="two">
-      <div>
-        <p class="lede">A tiny chip listens all the time on about 0.2 W. The Raspberry Pi stays off until the chip hears a likely drone, so a three-day node needs a fraction of the battery.</p>
-        <div class="callout" style="margin-top:22px"><b>Two-stage vs. a Pi that is always on</b><b class="tabular">≈ 10× less battery</b></div>
-        <p class="note">Estimate for the brain and mics over 72 hours: about 25 Wh and 0.15 kg of cells, against about 325 Wh and 1.6 kg for an always-on Pi 5.</p>
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">How it works</span><h2>From a sound to a launch site.</h2></div>
+        <p>Each node listens on its own. Together, a field of nodes turns rotor noise into a location.</p>
       </div>
-      <figure class="diagram" aria-label="Power over one hour: a low steady line from the chip, with two short tall spikes when the Pi wakes for a drone">
-        <svg viewBox="0 0 520 210" role="img" aria-label="Power draw over one hour with two drones">
-          <text class="s-ink" x="0" y="14" font-size="10">POWER DRAW · ONE HOUR · TWO DRONES</text>
-          <line class="k-hair" x1="0" y1="170" x2="520" y2="170"/>
-          <rect class="s-muted" x="0" y="163" width="520" height="7"/>
-          <rect class="s-ink" x="150" y="100" width="14" height="70"/>
-          <rect class="s-ink" x="360" y="100" width="14" height="70"/>
-          <text class="s-muted" x="384" y="112" font-size="9.5">PI AWAKE ≈ 2 W</text>
-          <text class="s-muted" x="384" y="126" font-size="9.5">ABOUT A MINUTE</text>
-          <text class="s-muted" x="0" y="194" font-size="9.5">CHIP ≈ 0.2 W · ALL THE TIME</text>
-          <text class="s-muted" x="440" y="194" font-size="9.5">60 MIN</text>
-        </svg>
-      </figure>
+      <div class="cards c4" data-r>
+        <div class="card"><div class="top mono"><span>01</span></div><h3>Hear</h3><p>Four microphones pick up rotor and engine noise.</p></div>
+        <div class="card"><div class="top mono"><span>02</span></div><h3>Classify</h3><p>On-node models confirm a drone and name its type.</p></div>
+        <div class="card"><div class="top mono"><span>03</span></div><h3>Locate</h3><p>Bearings from several nodes cross at the launch site.</p></div>
+        <div class="card"><div class="top mono"><span>04</span></div><h3>Report</h3><p>A 30-byte cue reaches headquarters over a LoRa mesh.</p></div>
+      </div>
     </div>
   </div>
 
-  <div class="block">
-    <div class="block-label mono"><span>Dropped from a drone</span><span class="muted">Concept render, not a built prototype</span></div>
-    <figure class="hero-fig">
-      <img src="drop-node.webp" alt="Concept render of a carrier drone with a rack of launch pipes, lowering a tripod listening node" width="1024" height="572" loading="lazy">
-      <figcaption class="mono"><span>Carrier drone placing a tripod node</span><span>Concept render</span></figcaption>
-    </figure>
-    <ol class="rows" style="margin-top:28px">
-      <li><span class="mono n">01</span><div><h3>Stack</h3><p>Legs fold flat against the body, so several nodes stack in one pipe about 50 mm wide.</p></div></li>
-      <li><span class="mono n">02</span><div><h3>Drop</h3><p>Released from about 10 m, the heavy battery end leads. A small streamer keeps the fall straight, with little drift.</p></div></li>
-      <li><span class="mono n">03</span><div><h3>Land and stand</h3><p>Springs swing the legs out to about 30° and lock. The battery hangs low inside the tripod, so the node is hard to tip.</p></div></li>
-    </ol>
-  </div>
-
-  <div class="block">
-    <div class="block-label mono"><span>Ways to deploy</span></div>
-    <div class="cols3">
-      <div class="col"><span class="mono">72 h</span><h3>Air-dropped node</h3><p>Launched from a pipe on a carrier drone. Light, expendable and placed where people cannot go.</p></div>
-      <div class="col"><span class="mono">7 days +</span><h3>Hand-placed tripod</h3><p>Set up by a recon team, with mics lifted 1.5–2 m above the ground for the best hearing.</p></div>
-      <div class="col"><span class="mono">Mains</span><h3>Fixed site</h3><p>Base perimeters and critical sites, running on site power with no battery limit.</p></div>
+  <div class="sec">
+    <div class="wrap">
+      <a class="feature" href="#product" data-go="product" data-r>
+        <figure class="fig">
+          <div class="frame hud">
+            <img src="drop-node.webp" alt="Concept render: a carrier drone with a rack of launch pipes lowers a tripod listening node" width="1024" height="572" loading="lazy">
+            <span class="ov tl"><span class="d"></span>Listening Node</span>
+            <span class="ov tr">Concept</span>
+            <div class="reticle hud hot" aria-hidden="true"><span class="ov">Node · deploying</span></div>
+          </div>
+        </figure>
+        <div class="feature-cap">
+          <div><span class="eyebrow mono">Product</span><h3 style="margin-top:16px">Listening Node</h3><p>Expendable acoustic sensor. Air-dropped or placed by hand.</p></div>
+          <span class="tlink">Learn more <span aria-hidden="true">→</span></span>
+        </div>
+      </a>
     </div>
   </div>
 
-  <div class="block">
-    <div class="block-label mono"><span>The ATHENE system</span><span class="muted">From sensor to decision</span></div>
-    <div class="cards4">
-      <div class="card4"><span class="mono">Hardware</span><h3>Listening Node</h3><p>The acoustic sensor and the way it is delivered to the field.</p><ul><li>Hears, finds direction, stamps time</li><li>Two-stage brain for long life</li><li>Air-drop or tripod</li></ul></div>
-      <div class="card4"><span class="mono">Software</span><h3>Mission Planning Tool</h3><p>Plans where the nodes go before anyone leaves.</p><ul><li>Loads military maps with terrain and vegetation</li><li>Flags likely take-off sites</li><li>Outputs orders that program the drop</li></ul></div>
-      <div class="card4"><span class="mono">Software</span><h3>Detection platform</h3><p>Turns node reports into a launch location.</p><ul><li>Tracks every node and its health</li><li>Crosses bearings into a fix</li><li>Learns from false alarms; keeps a sound archive</li></ul></div>
-      <div class="card4"><span class="mono">People</span><h3>Field doctrine</h3><p>A draft playbook for the unit that runs the network.</p><ul><li>Who places and owns the nodes</li><li>How a cue reaches the targeting cell</li><li>Training in under a day</li></ul></div>
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Built for</span><h2>Units that need to see the launch.</h2></div>
+      </div>
+      <div class="cards c3" data-r>
+        <div class="card short"><div class="top mono"><span>Military</span></div><h3>Army and Marine Corps</h3><p>Launch-site cues for brigade and division targeting cells.</p></div>
+        <div class="card short"><div class="top mono"><span>Border</span></div><h3>Border security</h3><p>Drones and their launch points along approach corridors.</p></div>
+        <div class="card short"><div class="top mono"><span>Homeland</span></div><h3>Homeland agencies</h3><p>Cross-border launch sites, found by a passive sensor.</p></div>
+      </div>
     </div>
   </div>
 
-  <div class="slide-foot mono"><span>Team Athene · UAS detection at source · October 2026</span><span class="tabular">03 / 06</span></div>
+  <div class="sec tight">
+    <div class="wrap">
+      <div class="cta hud" data-r>
+        <div><span class="eyebrow mono">Fall 2026</span><h2 style="margin-top:20px">Field testing this fall.</h2><p>Operators, engineers and test ranges: we want to hear from you.</p></div>
+        <a class="btn primary" href="#contact" data-go="contact">Get in touch <span class="ar" aria-hidden="true">→</span></a>
+      </div>
+    </div>
+  </div>
 </section>
 
-<!-- ============================== SPECS ============================== -->
-<section class="view wrap" data-view="specs" id="specs" hidden>
-  <div class="slide-top mono"><span>04 &nbsp;Specs &nbsp;/ &nbsp;Design targets</span><span class="muted">Athene &nbsp;/ &nbsp;Listening node</span></div>
-  <div class="slide-head">
-    <h1>What a field<br>of nodes can do</h1>
-    <div class="objective"><span class="arr" aria-hidden="true">↘</span><div><span class="mono muted">Objective</span><p>Design targets for one node and for a 5 km × 5 km field. We will measure them on our first prototypes this fall.</p></div></div>
+<!-- ======================= MISSION ======================= -->
+<section class="view" data-view="mission" data-title="Mission — ATHENE" hidden>
+  <div class="phero grid-bg">
+    <div class="wrap">
+      <span class="eyebrow mono">Mission</span>
+      <h1 class="d2">Find the launch, not just the drone.</h1>
+      <p class="lede">Early, passive warning of where enemy drones take off, so ground forces can act before the next wave.</p>
+    </div>
   </div>
 
-  <div class="block">
-    <div class="block-label mono"><span>Coverage · one 5 × 5 km field</span><span class="muted">Planning tool</span></div>
-    <div class="planner">
-      <div>
-        <div class="map"><svg id="grid" viewBox="0 0 560 560" role="img" aria-label="A 5 by 5 kilometre square with listening nodes on a grid, gateway nodes marked, and bearings from three nodes crossing at a launch site"></svg></div>
+  <div class="sec">
+    <div class="wrap">
+      <span class="eyebrow mono" data-r>The lesson</span>
+      <p class="quote" style="margin-top:28px" data-r>Aircraft are hard to find in the air. Air forces were beaten on the ground.</p>
+      <div class="chain mono" data-r aria-label="Find the base, hit the runway, destroy the aircraft, deny air power">
+        <span class="k">Find the base</span><span class="s">→</span><span class="k">Hit the runway</span><span class="s">→</span><span class="k">Destroy the aircraft</span><span class="s">=</span><span class="k hi">Deny air power</span>
+      </div>
+      <p class="lede" style="margin-top:28px" data-r>Drones are no different. Find where they launch, and the next wave never takes off.</p>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Approach</span><h2>Sense forward.</h2></div>
+        <p>Nodes sit 0–10 km past the front line, listening toward launch areas 10–35 km deep.</p>
+      </div>
+      <div class="diagram" data-r>
+        <svg viewBox="0 0 960 250" role="img" aria-label="Rear-area sensors sit behind our troops. ATHENE nodes sit forward of the front line, listening toward enemy launch sites 10 to 35 km deep.">
+          <rect class="dz" x="0" y="30" width="250" height="160"/>
+          <rect class="dz2" x="250" y="30" width="130" height="160"/>
+          <line class="dfl" x1="380" y1="14" x2="380" y2="206" stroke-width="1.5"/>
+          <text class="dt fg" x="388" y="24">FLOT</text>
+          <text class="dt" x="14" y="52">FRIENDLY REAR</text>
+          <text class="dt" x="262" y="52">OUR TROOPS</text>
+          <text class="dt" x="392" y="52">0–5 KM</text>
+          <text class="dt" x="542" y="52">5–10 KM</text>
+          <text class="dt" x="692" y="52">10–35 KM · LAUNCH AREAS</text>
+          <line class="dl" x1="530" y1="34" x2="530" y2="190" stroke-dasharray="3 5"/>
+          <line class="dl" x1="680" y1="34" x2="680" y2="190" stroke-dasharray="3 5"/>
+          <g class="dr"><circle cx="60" cy="118" r="4.5"/><circle cx="140" cy="150" r="4.5"/><circle cx="210" cy="100" r="4.5"/></g>
+          <g class="db"><line x1="430" y1="108" x2="800" y2="92"/><line x1="470" y1="156" x2="800" y2="92"/><line x1="560" y1="126" x2="800" y2="92"/><line x1="560" y1="126" x2="880" y2="160"/><line x1="470" y1="156" x2="880" y2="160"/></g>
+          <g class="dn"><rect x="425" y="103" width="10" height="10"/><rect x="465" y="151" width="10" height="10"/><rect x="555" y="121" width="10" height="10"/><rect x="509" y="83" width="10" height="10"/></g>
+          <g class="dx"><path d="M793 85 807 99M807 85 793 99"/><path d="M873 153 887 167M887 153 873 167"/></g>
+          <text class="dt hi" x="814" y="88">LAUNCH SITE</text>
+          <g transform="translate(0,232)">
+            <circle class="dr" cx="18" cy="-4" r="4.5"/><text class="dt" x="30" y="0">REAR-AREA SENSOR</text>
+            <rect class="dn" x="200" y="-9" width="10" height="10"/><text class="dt" x="218" y="0">ATHENE NODE</text>
+            <path class="dx" d="M352 -10 362 0M362 -10 352 0"/><text class="dt" x="372" y="0">LAUNCH SITE</text>
+            <line class="db" x1="500" y1="-4" x2="530" y2="-4"/><text class="dt" x="540" y="0">BEARING</text>
+          </g>
+        </svg>
+      </div>
+      <div class="cards c3" style="margin-top:32px" data-r>
+        <div class="card short"><div class="top mono"><span>Why forward</span></div><p>Launches sit beyond what rear-area sensors can hear.</p></div>
+        <div class="card short"><div class="top mono"><span>How they get there</span></div><p>Placed by a recon team or dropped by a carrier drone.</p></div>
+        <div class="card short"><div class="top mono"><span>What they must be</span></div><p>Passive, hard to spot, meshed, and under $1,000.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Scope</span><h2>Sensor to decision.</h2></div>
+        <p>ATHENE finds and reports. Other systems act.</p>
+      </div>
+      <div class="scope" data-r>
+        <div class="yes"><span class="mono" style="color:var(--fg)">What we build</span>
+          <ul><li><i>+</i>Listening Node and its delivery</li><li><i>+</i>Mission planning tool</li><li><i>+</i>Detection and decision platform</li><li><i>+</i>Draft field doctrine</li></ul></div>
+        <div><span class="mono" style="color:var(--fg)">What we don't</span>
+          <ul><li><i>–</i>Close-in detection under 3 km</li><li><i>–</i>Radar or camera sensors</li><li><i>–</i>Weapons</li></ul></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Roadmap</span><h2>Ten weeks, fall 2026.</h2></div>
+      </div>
+      <div class="timeline" data-r>
+        <div class="ms now"><span class="mono when">By 31 Oct · Now</span><h3>Stakeholders</h3><p>Map stakeholders and interview end users.</p></div>
+        <div class="ms now"><span class="mono when">By 31 Oct</span><h3>Problems</h3><p>Validate problem statements with a champion.</p></div>
+        <div class="ms"><span class="mono when">By 21 Nov</span><h3>Prototype</h3><p>Audio prototype and a digital twin of the field.</p></div>
+        <div class="ms"><span class="mono when">By 7 Dec</span><h3>Demo</h3><p>Proof-of-concept demo to an end user.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= PRODUCT ======================= -->
+<section class="view" data-view="product" data-title="Listening Node — ATHENE" hidden>
+  <div class="phero grid-bg">
+    <div class="wrap">
+      <span class="eyebrow mono">Product</span>
+      <h1 class="d2">Listening Node</h1>
+      <p class="lede">An expendable acoustic sensor that hears drones at launch. Dropped from a drone or placed by hand.</p>
+    </div>
+  </div>
+
+  <div class="wrap" data-r>
+    <figure class="fig">
+      <div class="frame hud">
+        <img src="drop-node.webp" alt="Concept render: a carrier drone with a rack of launch pipes lowers a tripod listening node" width="1024" height="572">
+        <span class="ov tl"><span class="d"></span>Carrier drone · pipe rack</span>
+        <span class="ov tr">Concept render</span>
+        <div class="reticle hud hot" aria-hidden="true"><span class="ov">Node · deploying</span></div>
+      </div>
+      <figcaption class="mono"><span>Carrier drone placing a tripod node</span><span>Not a built prototype</span></figcaption>
+    </figure>
+  </div>
+
+  <div class="sec" style="border-top:0">
+    <div class="wrap">
+      <div class="cards c4" data-r>
+        <div class="card"><div class="top mono"><span>Passive</span></div><h3>Listens only</h3><p>Transmits a short encrypted report only when it hears a drone.</p></div>
+        <div class="card"><div class="top mono"><span>Directional</span></div><h3>Four-mic array</h3><p>Finds the bearing and height of the sound.</p></div>
+        <div class="card"><div class="top mono"><span>Endurance</span></div><h3>72 hours</h3><p>Unattended on one battery when air-dropped.</p></div>
+        <div class="card"><div class="top mono"><span>Expendable</span></div><h3>Under $1,000</h3><p>Commercial parts. Wipes its data if lost.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap split">
+      <div data-r>
+        <span class="eyebrow mono">Two-stage brain</span>
+        <h2>Listens on 0.2 W.</h2>
+        <p class="lede" style="margin-top:24px">A sentry chip screens sound all the time. The Raspberry Pi wakes only for a likely drone, confirms it, reports, and powers off.</p>
+        <div style="margin-top:48px"><div class="stat-big tab">≈10×</div><span class="mono">Less battery than an always-on Pi · 72 h</span></div>
+      </div>
+      <div class="chart" data-r>
+        <svg viewBox="0 0 520 240" role="img" aria-label="Power draw over one hour: a low steady line from the sentry chip, with two short spikes when the Pi wakes for a drone">
+          <text class="ct fg" x="0" y="12">POWER DRAW · 1 HOUR · 2 DRONES</text>
+          <line class="cg" x1="0" y1="60" x2="520" y2="60"/><line class="cg" x1="0" y1="120" x2="520" y2="120"/>
+          <line class="cg" x1="0" y1="196" x2="520" y2="196"/>
+          <rect class="cb" x="0" y="188" width="520" height="8"/>
+          <rect class="cs" x="150" y="96" width="14" height="100"/>
+          <rect class="cs" x="360" y="96" width="14" height="100"/>
+          <line class="ca" x1="157" y1="96" x2="157" y2="70"/><line class="ca" x1="367" y1="96" x2="367" y2="70"/>
+          <text class="ct" x="170" y="80">PI ≈ 2 W</text>
+          <text class="ct" x="380" y="80">≈ 1 MIN</text>
+          <text class="ct" x="0" y="222">SENTRY ≈ 0.2 W · ALWAYS ON</text>
+          <text class="ct" x="520" y="222" text-anchor="end">60 MIN</text>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap split">
+      <div data-r>
+        <span class="eyebrow mono">Inside the node</span>
+        <h2>Five parts. Nothing exotic.</h2>
+      </div>
+      <div class="spec" data-r>
+        <dl>
+          <div class="r"><dt>Microphones</dt><dd>4-mic array<small>Three in a triangle, one raised</small></dd></div>
+          <div class="r"><dt>Sentry</dt><dd>Low-power chip, always on<small>Keeps the last 30 s of sound</small></dd></div>
+          <div class="r"><dt>Compute</dt><dd>Raspberry Pi<small>Off until woken</small></dd></div>
+          <div class="r"><dt>Link</dt><dd>LoRa radio and GPS<small>Time and place on every detection</small></dd></div>
+          <div class="r"><dt>Power</dt><dd>3-day pack, ≈ 0.15 kg<small>Brain and mics, estimate</small></dd></div>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Air-drop</span><h2>From pipe to tripod.</h2></div>
+        <p>Several nodes stack in one launch pipe on a carrier drone.</p>
+      </div>
+      <div class="cards c3" data-r>
+        <div class="card"><div class="top mono"><span>01</span><span>Stack</span></div><h3>Legs fold flat</h3><p>Nodes fit a pipe about 50 mm wide.</p></div>
+        <div class="card"><div class="top mono"><span>02</span><span>Drop</span></div><h3>Released at 10 m</h3><p>Battery end leads. A streamer keeps the fall straight.</p></div>
+        <div class="card"><div class="top mono"><span>03</span><span>Stand</span></div><h3>Legs lock at 30°</h3><p>Low battery weight keeps the tripod upright.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Deployment</span><h2>Three ways to field it.</h2></div>
+      </div>
+      <div class="cards c3" data-r>
+        <div class="card short"><div class="top mono"><span>Air-dropped</span><span class="hi">72 h</span></div><h3>Carrier drone</h3><p>Light and expendable. Goes where people cannot.</p></div>
+        <div class="card short"><div class="top mono"><span>Hand-placed</span><span class="hi">7 d +</span></div><h3>Recon team</h3><p>Mics raised 1.5–2 m for the best hearing.</p></div>
+        <div class="card short"><div class="top mono"><span>Fixed site</span><span class="hi">Mains</span></div><h3>Base perimeter</h3><p>Site power, no battery limit.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">The system</span><h2>More than a sensor.</h2></div>
+        <p>One hardware product and three tools that turn detections into decisions.</p>
+      </div>
+      <div class="cards c4" data-r>
+        <div class="card"><div class="top mono"><span>Hardware</span></div><h3>Listening Node</h3><p>Hears, finds direction, stamps time and place.</p></div>
+        <div class="card"><div class="top mono"><span>Software</span></div><h3>Mission planner</h3><p>Reads terrain, flags likely launch sites, places nodes.</p></div>
+        <div class="card"><div class="top mono"><span>Software</span></div><h3>Detection platform</h3><p>Tracks node health and crosses bearings into a fix.</p></div>
+        <div class="card"><div class="top mono"><span>People</span></div><h3>Field doctrine</h3><p>Who places the nodes and how a cue reaches targeting.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= SPECS ======================= -->
+<section class="view" data-view="specs" data-title="Specs — ATHENE" hidden>
+  <div class="phero grid-bg">
+    <div class="wrap">
+      <span class="eyebrow mono">Specifications</span>
+      <h1 class="d2">One field.<br>25 km².</h1>
+      <p class="lede">Design targets for a 5 × 5 km deployment. We measure them on our first prototypes this fall.</p>
+    </div>
+  </div>
+
+  <div class="sec" style="border-top:0;padding-top:0">
+    <div class="wrap planner">
+      <div data-r>
+        <div class="map hud"><svg id="grid" viewBox="0 0 560 560" role="img" aria-label="A 5 by 5 kilometre field with listening nodes on a grid, gateways marked, and bearings from three nodes crossing at a launch site"></svg></div>
         <div class="legend mono">
           <span><i style="background:var(--muted);border-radius:50%"></i>Node</span>
-          <span><i style="background:var(--ink)"></i>Gateway</span>
-          <span><i style="border:1.5px solid var(--ink);border-radius:50%"></i>Launch site fix</span>
+          <span><i style="background:var(--fg)"></i>Gateway</span>
+          <span><i style="border:1px solid var(--signal);border-radius:50%"></i>Launch-site fix</span>
         </div>
       </div>
-      <div class="control">
-        <label class="mono" for="spacing"><span>Node spacing</span><output id="spacingOut" class="tabular" for="spacing">500 m</output></label>
-        <input type="range" id="spacing" min="250" max="1000" step="50" value="500" aria-describedby="spacingHelp">
-        <div class="scale mono tabular"><span>250 m</span><span>1,000 m</span></div>
-        <div class="readouts tabular">
-          <div class="readout"><div class="v" id="oNodes">121</div><span class="mono">Nodes in the field</span></div>
+      <div class="ctrl" data-r>
+        <span class="eyebrow mono">Coverage planner</span>
+        <h2 style="margin-top:20px;font-size:clamp(28px,2.8vw,40px)">Set the spacing.</h2>
+        <div style="margin-top:36px">
+          <label class="mono" for="spacing"><span>Node spacing</span><output id="spacingOut" class="tab" for="spacing">500 m</output></label>
+          <input type="range" id="spacing" min="250" max="1000" step="50" value="500" aria-describedby="spacingHelp">
+          <div class="scale mono tab"><span>250 m</span><span>1,000 m</span></div>
+        </div>
+        <div class="readouts tab">
+          <div class="readout"><div class="v" id="oNodes">121</div><span class="mono">Nodes</span></div>
           <div class="readout"><div class="v" id="oGw">16</div><span class="mono">Gateways</span></div>
-          <div class="readout"><div class="v" id="oCost">$121k</div><span class="mono">At $1,000 a node</span></div>
+          <div class="readout"><div class="v" id="oCost">$121k</div><span class="mono">At $1k a node</span></div>
           <div class="readout"><div class="v" id="oRange">500 m</div><span class="mono">Hearing range needed</span></div>
         </div>
-        <p class="note" id="spacingHelp">Each drone should be heard by at least two nodes, so spacing should match how far one node can hear: 100–500 m is our planning range. Real fields are denser near likely launch sites and thinner elsewhere; the Mission Planning Tool picks the pattern.</p>
+        <p class="fine" id="spacingHelp">Every drone should reach at least two nodes, so spacing matches hearing range (planned 100–500 m). Real fields are denser near likely launch sites.</p>
       </div>
     </div>
   </div>
 
-  <div class="block">
-    <div class="block-label mono"><span>Design targets</span><span class="muted">Not yet measured</span></div>
-    <div class="spec-groups">
-      <div class="spec"><h3>Field and network</h3><dl>
-        <div class="r"><dt>Field size</dt><dd>5 km × 5 km<small>25 km² per deployment</small></dd></div>
-        <div class="r"><dt>Reach from headquarters</dt><dd>Up to 50 km</dd></div>
-        <div class="r"><dt>Launch-area fix</dt><dd>About 100 m<small>Goal: 50 m</small></dd></div>
-        <div class="r"><dt>Time to cue</dt><dd>Minutes<small>Plus a daily force-generation map</small></dd></div>
-        <div class="r"><dt>Network</dt><dd>LoRa mesh → gateway → HQ<small>Two gateways per field, one active, one backup</small></dd></div>
-        <div class="r"><dt>Output</dt><dd>TAK / Cursor on Target first</dd></div>
-      </dl></div>
-      <div class="spec"><h3>Sensing</h3><dl>
-        <div class="r"><dt>Microphones</dt><dd>4-mic array per node<small>Three in a triangle, one raised, for direction and height</small></dd></div>
-        <div class="r"><dt>Hearing range</dt><dd>100–500 m per node<small>Coverage comes from density</small></dd></div>
-        <div class="r"><dt>Frequency band</dt><dd>Infrasound (&lt; 20 Hz) through audible</dd></div>
-        <div class="r"><dt>Detection</dt><dd>Hum check, then neural-network confirm<small>Names the drone type with a confidence score</small></dd></div>
-        <div class="r"><dt>Time and place</dt><dd>GPS, with a backup clock</dd></div>
-      </dl></div>
-      <div class="spec"><h3>Power and endurance</h3><dl>
-        <div class="r"><dt>Listening draw</dt><dd>≈ 0.2 W<small>Pi switches on only for a likely drone</small></dd></div>
-        <div class="r"><dt>Prototype</dt><dd>24 hours</dd></div>
-        <div class="r"><dt>Air-dropped node</dt><dd>72 hours</dd></div>
-        <div class="r"><dt>Hand-placed node</dt><dd>7 days or more</dd></div>
-        <div class="r"><dt>Fixed site</dt><dd>Mains power</dd></div>
-      </dl></div>
-      <div class="spec"><h3>Build, signature and cost</h3><dl>
-        <div class="r"><dt>Drop node</dt><dd>≈ 0.6 kg, under 50 mm wide<small>Estimate · survives a 10 m drop (goal)</small></dd></div>
-        <div class="r"><dt>Signature</dt><dd>Passive<small>Sends only ~30-byte encrypted reports; audio never leaves the node</small></dd></div>
-        <div class="r"><dt>Parts</dt><dd>Commercial, field-replaceable</dd></div>
-        <div class="r"><dt>Cost</dt><dd>Under $1,000 per node</dd></div>
-        <div class="r"><dt>Training</dt><dd>Under one day for an operator</dd></div>
-      </dl></div>
+  <div class="sec">
+    <div class="wrap">
+      <div class="sec-head" data-r>
+        <div><span class="eyebrow mono">Design targets</span><h2>The numbers.</h2></div>
+        <p>Targets and estimates from our analysis. Not field-test results.</p>
+      </div>
+      <div class="specs">
+        <div class="spec" data-r><h3>Field and network</h3><dl>
+          <div class="r"><dt>Field size</dt><dd>5 × 5 km<small>25 km² per deployment</small></dd></div>
+          <div class="r"><dt>Reach from HQ</dt><dd>Up to 50 km</dd></div>
+          <div class="r"><dt>Launch-area fix</dt><dd>≈ 100 m<small>Goal: 50 m</small></dd></div>
+          <div class="r"><dt>Time to cue</dt><dd>Minutes</dd></div>
+          <div class="r"><dt>Network</dt><dd>LoRa mesh → gateway → HQ<small>Two gateways per field</small></dd></div>
+          <div class="r"><dt>Output</dt><dd>TAK / Cursor on Target</dd></div>
+        </dl></div>
+        <div class="spec" data-r><h3>Sensing</h3><dl>
+          <div class="r"><dt>Microphones</dt><dd>4-mic array per node</dd></div>
+          <div class="r"><dt>Hearing range</dt><dd>100–500 m per node</dd></div>
+          <div class="r"><dt>Band</dt><dd>Infrasound to audible</dd></div>
+          <div class="r"><dt>Detection</dt><dd>Hum check, then neural-net confirm<small>Drone type with confidence</small></dd></div>
+          <div class="r"><dt>Timing</dt><dd>GPS, backup clock</dd></div>
+        </dl></div>
+        <div class="spec" data-r><h3>Power and endurance</h3><dl>
+          <div class="r"><dt>Listening draw</dt><dd>≈ 0.2 W</dd></div>
+          <div class="r"><dt>Prototype</dt><dd>24 h</dd></div>
+          <div class="r"><dt>Air-dropped</dt><dd>72 h</dd></div>
+          <div class="r"><dt>Hand-placed</dt><dd>7 days +</dd></div>
+          <div class="r"><dt>Fixed site</dt><dd>Mains</dd></div>
+        </dl></div>
+        <div class="spec" data-r><h3>Build and cost</h3><dl>
+          <div class="r"><dt>Drop node</dt><dd>≈ 0.6 kg, &lt; 50 mm wide<small>Survives a 10 m drop (goal)</small></dd></div>
+          <div class="r"><dt>Signature</dt><dd>Passive<small>~30-byte encrypted reports; audio stays on the node</small></dd></div>
+          <div class="r"><dt>Parts</dt><dd>Commercial, field-replaceable</dd></div>
+          <div class="r"><dt>Cost</dt><dd>&lt; $1,000 per node</dd></div>
+          <div class="r"><dt>Training</dt><dd>&lt; 1 day</dd></div>
+        </dl></div>
+      </div>
     </div>
-    <p class="note">All figures are design targets or estimates from our analysis, not results from field tests.</p>
   </div>
-
-  <div class="slide-foot mono"><span>Team Athene · UAS detection at source · October 2026</span><span class="tabular">04 / 06</span></div>
 </section>
 
-<!-- ============================== TEAM ============================== -->
-<section class="view wrap" data-view="team" id="team" hidden>
-  <div class="slide-top mono"><span>05 &nbsp;Team &nbsp;/ &nbsp;People</span><span class="muted">Athene &nbsp;/ &nbsp;Listening node</span></div>
-  <div class="slide-head">
-    <h1>Meet the<br>team</h1>
-    <div class="objective"><span class="arr" aria-hidden="true">↘</span><div><span class="mono muted">Objective</span><p>Four people across product, hardware, operations and sensing, building ATHENE at Stanford.</p></div></div>
+<!-- ======================= TEAM ======================= -->
+<section class="view" data-view="team" data-title="Team — ATHENE" hidden>
+  <div class="phero grid-bg">
+    <div class="wrap">
+      <span class="eyebrow mono">Team</span>
+      <h1 class="d2">The team.</h1>
+      <p class="lede">Built at Stanford in Innovating for Defense, with the Gordian Knot Center for National Security Innovation.</p>
+    </div>
   </div>
 
-  <div class="block">
-    <div class="team">
-      <article class="member">
-        <img src="team-x.webp" alt="Portrait of X Chua" width="460" height="460" loading="lazy">
-        <span class="mono role">Chief Executive Officer</span>
-        <h3>X Chua</h3>
-        <div class="deg">Stanford GSB · MSx ’27</div>
-        <p class="bio">Leads product and partnerships. Works with outside stakeholders and shapes how the network is deployed and commanded.</p>
-        <div class="chips"><span class="chip">Product</span><span class="chip">Stakeholders</span><span class="chip">Deployment and C2</span></div>
+  <div class="sec" style="border-top:0;padding-top:0">
+    <div class="wrap team">
+      <article class="member" data-r>
+        <div class="ph"><img src="team-x.webp" alt="Portrait of X Chua" width="480" height="480" loading="lazy"><span class="ov">01</span></div>
+        <div class="who"><h3>X Chua</h3><span class="mono role">CEO</span></div>
+        <span class="mono deg">Stanford GSB · MSx ’27</span>
+        <p>Leads product and partnerships, and how the network is deployed and commanded.</p>
       </article>
-      <article class="member">
-        <img src="team-korina.webp" alt="Portrait of Korina Arpášová" width="460" height="460" loading="lazy">
-        <span class="mono role">Technical Staff</span>
-        <h3>Korina Arpášová</h3>
-        <div class="deg">MS, Management Science &amp; Engineering ’26</div>
-        <p class="bio">Builds the sensing and decision models: the digital twin of the field, signal processing and the decision layer.</p>
-        <div class="chips"><span class="chip">Modeling</span><span class="chip">Digital twin</span><span class="chip">Signal processing</span></div>
+      <article class="member" data-r>
+        <div class="ph"><img src="team-korina.webp" alt="Portrait of Korina Arpášová" width="480" height="480" loading="lazy"><span class="ov">02</span></div>
+        <div class="who"><h3>Korina Arpášová</h3><span class="mono role">Technical Staff</span></div>
+        <span class="mono deg">MS, Management Science &amp; Engineering ’26</span>
+        <p>Builds the digital twin, signal processing and decision models.</p>
       </article>
-      <article class="member">
-        <img src="team-gina.webp" alt="Portrait of Gina Shapiro" width="460" height="460" loading="lazy">
-        <span class="mono role">Chief Operating Officer</span>
-        <h3>Gina Shapiro</h3>
-        <div class="deg">BA, International Relations ’28</div>
-        <p class="bio">Runs business development and the user journey, along with research, basing and the draft field doctrine.</p>
-        <div class="chips"><span class="chip">Business development</span><span class="chip">Research</span><span class="chip">Doctrine</span></div>
+      <article class="member" data-r>
+        <div class="ph"><img src="team-gina.webp" alt="Portrait of Gina Shapiro" width="480" height="480" loading="lazy"><span class="ov">03</span></div>
+        <div class="who"><h3>Gina Shapiro</h3><span class="mono role">COO</span></div>
+        <span class="mono deg">BA, International Relations ’28</span>
+        <p>Runs business development, research and the draft field doctrine.</p>
       </article>
-      <article class="member">
-        <img src="team-philip.webp" alt="Portrait of Philip Santiago" width="460" height="460" loading="lazy">
-        <span class="mono role">Chief Technology Officer</span>
-        <h3>Philip Santiago</h3>
-        <div class="deg">BS, Mechanical Engineering &amp; Computer Science ’28</div>
-        <p class="bio">Leads the hardware: the acoustic sensor, its power system and how nodes are delivered to the field.</p>
-        <div class="chips"><span class="chip">Sensor hardware</span><span class="chip">Power</span><span class="chip">Delivery</span></div>
+      <article class="member" data-r>
+        <div class="ph"><img src="team-philip.webp" alt="Portrait of Philip Santiago" width="480" height="480" loading="lazy"><span class="ov">04</span></div>
+        <div class="who"><h3>Philip Santiago</h3><span class="mono role">CTO</span></div>
+        <span class="mono deg">BS, Mechanical Engineering &amp; CS ’28</span>
+        <p>Leads hardware: the acoustic sensor, its power system and delivery.</p>
       </article>
     </div>
   </div>
 
-  <div class="block">
-    <div class="two">
-      <div>
-        <div class="block-label mono"><span>Where we work</span></div>
-        <p class="lede">ATHENE is built in Stanford's Innovating for Defense course, fall 2026, with the Gordian Knot Center for National Security Innovation.</p>
-      </div>
-      <div>
-        <div class="block-label mono"><span>Help us build it</span></div>
-        <ul class="rows plain">
-          <li><div><h3>Audio and signal engineers</h3><p>Sensor analytics and acoustic signal processing.</p></div></li>
-          <li><div><h3>Audio hardware engineers</h3><p>Microphones, enclosures and low-power boards.</p></div></li>
-          <li><div><h3>Data</h3><p>Infrasound research and recordings of drone sounds.</p></div></li>
-          <li><div><h3>Field testing</h3><p>Ranges and end users who can test with us.</p></div></li>
-        </ul>
-        <p style="margin-top:18px"><a class="link-arrow" href="#contact" data-go="contact">Contact the team →</a></p>
+  <div class="sec tight">
+    <div class="wrap">
+      <div class="cta hud" data-r>
+        <div><span class="eyebrow mono">Join us</span><h2 style="margin-top:20px">Help us build it.</h2>
+          <div class="tags mono" style="margin-top:24px"><span>Acoustic signal processing</span><span>Low-power hardware</span><span>Drone audio data</span><span>Test ranges</span></div></div>
+        <a class="btn primary" href="#contact" data-go="contact">Contact the team <span class="ar" aria-hidden="true">→</span></a>
       </div>
     </div>
   </div>
-
-  <div class="slide-foot mono"><span>Team Athene · UAS detection at source · October 2026</span><span class="tabular">05 / 06</span></div>
 </section>
 
-<!-- ============================== CONTACT ============================== -->
-<section class="view wrap" data-view="contact" id="contact" hidden>
-  <div class="slide-top mono"><span>06 &nbsp;Contact &nbsp;/ &nbsp;Get in touch</span><span class="muted">Athene &nbsp;/ &nbsp;Listening node</span></div>
-  <div class="slide-head">
-    <h1>Talk to<br>the team</h1>
-    <div class="objective"><span class="arr" aria-hidden="true">↘</span><div><span class="mono muted">Objective</span><p>Operators, engineers, testers and partners: email us about what you see in the field and how we can help.</p></div></div>
+<!-- ======================= CONTACT ======================= -->
+<section class="view" data-view="contact" data-title="Contact — ATHENE" hidden>
+  <div class="phero grid-bg">
+    <div class="wrap">
+      <span class="eyebrow mono">Contact</span>
+      <h1 class="d2">Talk to us.</h1>
+      <p class="lede">Operators, engineers, test ranges and partners. Tell us what you see in the field.</p>
+    </div>
   </div>
 
-  <div class="block">
-    <div class="two">
-      <div>
-        <div class="block-label mono"><span>Email the team</span><span class="muted">Stanford addresses</span></div>
+  <div class="sec" style="border-top:0;padding-top:0">
+    <div class="wrap split">
+      <div data-r>
         <ul class="contacts">
-          <li><div class="who"><h3>X Chua</h3><span class="mono muted">CEO · partnerships, product and end users</span></div><div class="addr"><a href="mailto:xchua@stanford.edu">xchua@stanford.edu</a><button class="copy mono" type="button" data-copy="xchua@stanford.edu" aria-label="Copy X Chua's email">Copy</button></div></li>
-          <li><div class="who"><h3>Philip Santiago</h3><span class="mono muted">CTO · hardware, power and field tests</span></div><div class="addr"><a href="mailto:philipds@stanford.edu">philipds@stanford.edu</a><button class="copy mono" type="button" data-copy="philipds@stanford.edu" aria-label="Copy Philip Santiago's email">Copy</button></div></li>
-          <li><div class="who"><h3>Gina Shapiro</h3><span class="mono muted">COO · operations and business development</span></div><div class="addr"><a href="mailto:ginashap@stanford.edu">ginashap@stanford.edu</a><button class="copy mono" type="button" data-copy="ginashap@stanford.edu" aria-label="Copy Gina Shapiro's email">Copy</button></div></li>
-          <li><div class="who"><h3>Korina Arpášová</h3><span class="mono muted">Technical staff · modeling and signal processing</span></div><div class="addr"><a href="mailto:korina@stanford.edu">korina@stanford.edu</a><button class="copy mono" type="button" data-copy="korina@stanford.edu" aria-label="Copy Korina Arpášová's email">Copy</button></div></li>
+          <li><div><h3>X Chua</h3><span class="mono">CEO · partnerships and end users</span></div><div class="addr"><a href="mailto:xchua@stanford.edu">xchua@stanford.edu</a><button class="copy mono" type="button" data-copy="xchua@stanford.edu" aria-label="Copy X Chua's email">Copy</button></div></li>
+          <li><div><h3>Philip Santiago</h3><span class="mono">CTO · hardware and field tests</span></div><div class="addr"><a href="mailto:philipds@stanford.edu">philipds@stanford.edu</a><button class="copy mono" type="button" data-copy="philipds@stanford.edu" aria-label="Copy Philip Santiago's email">Copy</button></div></li>
+          <li><div><h3>Gina Shapiro</h3><span class="mono">COO · operations and business</span></div><div class="addr"><a href="mailto:ginashap@stanford.edu">ginashap@stanford.edu</a><button class="copy mono" type="button" data-copy="ginashap@stanford.edu" aria-label="Copy Gina Shapiro's email">Copy</button></div></li>
+          <li><div><h3>Korina Arpášová</h3><span class="mono">Technical staff · modeling</span></div><div class="addr"><a href="mailto:korina@stanford.edu">korina@stanford.edu</a><button class="copy mono" type="button" data-copy="korina@stanford.edu" aria-label="Copy Korina Arpášová's email">Copy</button></div></li>
         </ul>
-        <p class="note">Partnerships, end users and field tests: start with X. Hardware and test questions: write to Philip.</p>
       </div>
-
-      <div>
-        <div class="block-label mono"><span>Questions we hear</span></div>
-        <details><summary>Is it really passive?</summary><p>Yes. A node only listens. Its radio receives all the time, which gives nothing away, and it transmits only a short encrypted report when it hears a drone.</p></details>
-        <details><summary>Does it catch fiber-optic drones?</summary><p>Yes. Fiber-optic and pre-programmed drones send no radio signal, but they still make noise. Sound is the one signature every propeller drone has.</p></details>
-        <details><summary>Does it replace counter-drone systems?</summary><p>No. ATHENE finds where drones launch and cues the units and systems that act. It complements detect-and-defeat systems in the air.</p></details>
-        <details><summary>How do the nodes get to the field?</summary><p>A recon team places tripod nodes by hand, or a carrier drone drops light nodes from a launch pipe. The Mission Planning Tool chooses where.</p></details>
-        <details><summary>Where is the project today?</summary><p>We are interviewing end users now and building the first audio prototype, with a proof-of-concept demo planned for December 2026.</p></details>
+      <div class="faq" data-r>
+        <details><summary>Is it really passive?</summary><p>Yes. A node only listens, and transmits a short encrypted report only when it hears a drone.</p></details>
+        <details><summary>Does it catch fiber-optic drones?</summary><p>Yes. They send no radio signal, but every propeller drone makes noise.</p></details>
+        <details><summary>Does it replace counter-drone systems?</summary><p>No. ATHENE finds where drones launch and cues the units and systems that act.</p></details>
+        <details><summary>How do nodes reach the field?</summary><p>Placed by hand, or dropped from a launch pipe on a carrier drone. The mission planner chooses where.</p></details>
+        <details><summary>Where is the project today?</summary><p>Interviewing end users and building the first audio prototype. Demo planned for December 2026.</p></details>
       </div>
     </div>
   </div>
-
-  <div class="slide-foot mono"><span>Team Athene · UAS detection at source · October 2026</span><span class="tabular">06 / 06</span></div>
 </section>
 </main>
 
-<footer class="site-foot">
-  <div class="wrap mono">
-    <span>© 2026 Team Athene</span>
-    <nav aria-label="Footer">
-      <a href="#mission" data-go="mission">Mission</a><a href="#product" data-go="product">Product</a><a href="#specs" data-go="specs">Specs</a><a href="#team" data-go="team">Team</a><a href="#contact" data-go="contact">Contact</a>
-    </nav>
+<footer class="ftr">
+  <div class="wrap">
+    <div class="ftr-top">
+      <div>
+        <a class="logo" href="#home" data-go="home" aria-label="ATHENE home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4 20 19H4Z" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="12" cy="14" r="2" fill="#FF8A3D"/></svg>ATHENE</a>
+        <p>Passive acoustic detection of drones at launch.</p>
+      </div>
+      <nav class="mono" aria-label="Footer">
+        <a href="#mission" data-go="mission">Mission</a><a href="#product" data-go="product">Product</a><a href="#specs" data-go="specs">Specs</a><a href="#team" data-go="team">Team</a><a href="#contact" data-go="contact">Contact</a>
+      </nav>
+    </div>
+    <div class="ftr-bot mono"><span>© 2026 Team ATHENE · Stanford, CA</span><span>Figures are design targets</span></div>
   </div>
 </footer>
 
 <script>
 (function(){
+  var root=document.documentElement; root.classList.add("js");
   var VIEWS=["home","mission","product","specs","team","contact"];
   var sections=[].slice.call(document.querySelectorAll("[data-view]"));
-  var navLinks=[].slice.call(document.querySelectorAll(".nav a"));
-  function show(name, scroll){
+  var links=[].slice.call(document.querySelectorAll(".nav a,.mnav a"));
+  var menu=document.querySelector(".menu"), mnav=document.getElementById("mnav");
+  function setMenu(open){ menu.setAttribute("aria-expanded",open?"true":"false"); mnav.classList.toggle("open",open); document.body.style.overflow=open?"hidden":""; }
+  menu.addEventListener("click",function(){ setMenu(menu.getAttribute("aria-expanded")!=="true"); });
+
+  /* reveal on scroll: plain rect checks, so it also works inside frames and previews */
+  var pending=[].slice.call(document.querySelectorAll("[data-r]")), ticking=false;
+  function reveal(){
+    ticking=false; var vh=window.innerHeight||document.documentElement.clientHeight;
+    pending=pending.filter(function(n){
+      if(!n.getClientRects().length) return true;
+      if(n.getBoundingClientRect().top<vh*.94){ n.classList.add("in"); return false; }
+      return true;
+    });
+  }
+  function onScroll(){ if(!ticking){ ticking=true; requestAnimationFrame(reveal); } }
+  window.addEventListener("scroll",onScroll,{passive:true});
+  window.addEventListener("resize",onScroll);
+  window.addEventListener("load",reveal);
+
+  function show(name,scroll){
     if(VIEWS.indexOf(name)<0) name="home";
-    sections.forEach(function(s){ s.hidden = s.getAttribute("data-view")!==name; });
-    navLinks.forEach(function(a){ if(a.getAttribute("data-go")===name) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+    sections.forEach(function(s){
+      var on=s.getAttribute("data-view")===name;
+      s.hidden=!on;
+      if(on){ s.style.animation="none"; void s.offsetWidth; s.style.animation=""; document.title=s.getAttribute("data-title"); }
+    });
+    links.forEach(function(a){ if(a.getAttribute("data-go")===name) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); });
+    setMenu(false);
     if(scroll!==false) window.scrollTo(0,0);
-    if(name==="specs") drawGrid();
+    if(name==="specs") draw();
+    requestAnimationFrame(reveal); setTimeout(reveal,250);
   }
   document.addEventListener("click",function(e){
-    var a=e.target.closest && e.target.closest("[data-go]");
-    if(!a) return;
-    e.preventDefault();
-    var n=a.getAttribute("data-go");
-    try{ history.replaceState(null,"","#"+n); }catch(_){}
+    var a=e.target.closest&&e.target.closest("[data-go]"); if(!a) return;
+    e.preventDefault(); var n=a.getAttribute("data-go");
+    try{ history.pushState(null,"","#"+n); }catch(_){}
     show(n);
   });
+  window.addEventListener("popstate",function(){ show((location.hash||"").slice(1)); });
   window.addEventListener("hashchange",function(){ show((location.hash||"").slice(1)); });
 
-  /* ---------- coverage planner ---------- */
-  var SVGNS="http://www.w3.org/2000/svg", FIELD=5000, PAD=30, SIZE=500;
-  var grid=document.getElementById("grid"), slider=document.getElementById("spacing");
-  function el(tag,attrs,parent){var n=document.createElementNS(SVGNS,tag);for(var k in attrs)n.setAttribute(k,attrs[k]);(parent||grid).appendChild(n);return n;}
-  function px(m){ return PAD + m*SIZE/FIELD; }
-  function drawGrid(){
+  /* coverage planner */
+  var NS="http://www.w3.org/2000/svg", FIELD=5000, PAD=34, SIZE=492;
+  var svg=document.getElementById("grid"), slider=document.getElementById("spacing");
+  function el(t,a){ var n=document.createElementNS(NS,t); for(var k in a) n.setAttribute(k,a[k]); svg.appendChild(n); return n; }
+  function px(m){ return PAD+m*SIZE/FIELD; }
+  function txt(x,y,s,c,anchor){ var t=el("text",{x:x,y:y,"class":"gt "+(c||""),"text-anchor":anchor||"start"}); t.textContent=s; return t; }
+  function draw(){
     var sp=+slider.value;
-    while(grid.firstChild) grid.removeChild(grid.firstChild);
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
     for(var k=0;k<=5;k++){
       var p=px(k*1000);
-      el("line",{x1:p,y1:PAD,x2:p,y2:PAD+SIZE,"class":"k-hair","stroke-width":1});
-      el("line",{x1:PAD,y1:p,x2:PAD+SIZE,y2:p,"class":"k-hair","stroke-width":1});
-      var t=el("text",{x:p,y:PAD+SIZE+18,"text-anchor":"middle","class":"s-muted","font-size":10}); t.textContent=k+" KM";
+      el("line",{x1:p,y1:PAD,x2:p,y2:PAD+SIZE,"class":"gl"}); el("line",{x1:PAD,y1:p,x2:PAD+SIZE,y2:p,"class":"gl"});
+      txt(p,PAD+SIZE+20,k+" KM","", "middle");
     }
-    el("rect",{x:PAD,y:PAD,width:SIZE,height:SIZE,fill:"none","class":"k-ink","stroke-width":1.5});
-    var n=Math.floor(FIELD/sp)+1, step=FIELD/(n-1), nodes=[];
-    var g=3; /* one gateway per 3 x 3 block of nodes */
-    var gws=0, r=n>30?2.2:(n>16?3:4);
-    for(var i=0;i<n;i++) for(var j=0;j<n;j++){
-      var x=i*step, y=j*step, isG=(i%g===1 && j%g===1);
-      nodes.push({x:x,y:y,g:isG});
-    }
+    el("rect",{x:PAD,y:PAD,width:SIZE,height:SIZE,"class":"gb"});
+    var n=Math.floor(FIELD/sp)+1, step=FIELD/(n-1), nodes=[], gws=0, r=n>30?2:(n>16?2.6:3.4);
+    for(var i=0;i<n;i++) for(var j=0;j<n;j++) nodes.push({x:i*step,y:j*step,g:(i%3===1&&j%3===1)});
     if(nodes.filter(function(d){return d.g;}).length<2){ nodes[Math.floor(n/2)].g=true; nodes[nodes.length-1-Math.floor(n/2)].g=true; }
     var site={x:3650,y:1350};
-    var near=nodes.slice().sort(function(a,b){return (Math.hypot(a.x-site.x,a.y-site.y))-(Math.hypot(b.x-site.x,b.y-site.y));}).slice(1,4);
-    near.forEach(function(d){ el("line",{x1:px(d.x),y1:px(d.y),x2:px(site.x),y2:px(site.y),"class":"k-ink","stroke-width":1.2,"stroke-dasharray":"4 4"}); });
+    nodes.slice().sort(function(a,b){ return Math.hypot(a.x-site.x,a.y-site.y)-Math.hypot(b.x-site.x,b.y-site.y); }).slice(1,4)
+      .forEach(function(d){ el("line",{x1:px(d.x),y1:px(d.y),x2:px(site.x),y2:px(site.y),"class":"gbr"}); });
     nodes.forEach(function(d){
-      if(d.g){ gws++; el("rect",{x:px(d.x)-r-1.5,y:px(d.y)-r-1.5,width:2*r+3,height:2*r+3,"class":"s-ink"}); }
-      else el("circle",{cx:px(d.x),cy:px(d.y),r:r,"class":"s-muted"});
+      if(d.g){ gws++; el("rect",{x:px(d.x)-r-1.5,y:px(d.y)-r-1.5,width:2*r+3,height:2*r+3,"class":"gw"}); }
+      else el("circle",{cx:px(d.x),cy:px(d.y),r:r,"class":"gn"});
     });
-    el("circle",{cx:px(site.x),cy:px(site.y),r:14,fill:"none","class":"k-ink","stroke-width":1.5});
-    el("path",{d:"M"+(px(site.x)-6)+" "+(px(site.y)-6)+" L"+(px(site.x)+6)+" "+(px(site.y)+6)+" M"+(px(site.x)+6)+" "+(px(site.y)-6)+" L"+(px(site.x)-6)+" "+(px(site.y)+6),"class":"k-ink","stroke-width":2});
-    var lt=el("text",{x:px(site.x)+20,y:px(site.y)-14,"class":"s-ink","font-size":10}); lt.textContent="LAUNCH SITE";
-    var ht=el("text",{x:PAD,y:PAD-12,"class":"s-ink","font-size":10}); ht.textContent="5 × 5 KM FIELD · "+n*n+" NODES";
-    var hq=el("text",{x:PAD+SIZE,y:PAD-12,"text-anchor":"end","class":"s-muted","font-size":10}); hq.textContent="HQ ≤ 50 KM →";
-    var count=n*n;
+    var sx=px(site.x), sy=px(site.y);
+    el("circle",{cx:sx,cy:sy,r:15,"class":"gfx"});
+    el("path",{d:"M"+(sx-5)+" "+(sy-5)+"L"+(sx+5)+" "+(sy+5)+"M"+(sx+5)+" "+(sy-5)+"L"+(sx-5)+" "+(sy+5),"class":"gfx","stroke-width":1.6});
+    txt(sx+22,sy-14,"LAUNCH SITE","hi");
+    txt(PAD,PAD-14,"5 × 5 KM · "+(n*n)+" NODES","fg");
+    txt(PAD+SIZE,PAD-14,"HQ ≤ 50 KM →","","end");
+    var count=n*n, cost=count*1000;
     document.getElementById("spacingOut").textContent=sp.toLocaleString("en-US")+" m";
     document.getElementById("oNodes").textContent=count.toLocaleString("en-US");
     document.getElementById("oGw").textContent=gws;
-    var cost=count*1000;
     document.getElementById("oCost").textContent=cost>=1e6?("$"+(cost/1e6).toFixed(2)+"M"):("$"+Math.round(cost/1000)+"k");
     document.getElementById("oRange").textContent=sp.toLocaleString("en-US")+" m";
   }
-  slider.addEventListener("input",drawGrid);
+  slider.addEventListener("input",draw);
 
-  /* ---------- copy email ---------- */
+  /* copy email */
   document.addEventListener("click",function(e){
-    var b=e.target.closest && e.target.closest("button.copy"); if(!b) return;
+    var b=e.target.closest&&e.target.closest("button.copy"); if(!b) return;
     var v=b.getAttribute("data-copy");
-    function done(){ var t=b.textContent; b.textContent="Copied"; setTimeout(function(){ b.textContent=t; },1600); }
-    function fallback(){ var a=b.parentNode.querySelector("a"); var r=document.createRange(); r.selectNodeContents(a); var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(r); b.textContent="Press ⌘C"; setTimeout(function(){ b.textContent="Copy"; },2200); }
-    if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(v).then(done,fallback); } else fallback();
+    function done(){ b.textContent="Copied"; setTimeout(function(){ b.textContent="Copy"; },1600); }
+    function fallback(){ var a=b.parentNode.querySelector("a"), r=document.createRange(); r.selectNodeContents(a); var s=window.getSelection(); s.removeAllRanges(); s.addRange(r); b.textContent="Press ⌘C"; setTimeout(function(){ b.textContent="Copy"; },2200); }
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(v).then(done,fallback); else fallback();
   });
 
-  show((location.hash||"").slice(1), false);
-  drawGrid();
+  show((location.hash||"").slice(1),false);
+  draw();
 })();
 </script>
 </body>
