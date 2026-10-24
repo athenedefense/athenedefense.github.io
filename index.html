@@ -290,9 +290,9 @@ input[type=range]::-moz-range-thumb{width:14px;height:14px;background:var(--fg);
 .member img{width:100%;height:100%;object-fit:cover;filter:grayscale(1) contrast(1.05) brightness(.94);transition:filter .5s ease,transform 1s cubic-bezier(.2,.7,.2,1)}
 .member:hover img{filter:grayscale(0) contrast(1.02);transform:scale(1.02)}
 .member .ph .ov{bottom:16px;left:16px;top:auto}
-.member .who{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;padding-top:24px}
+.member .who{display:flex;justify-content:flex-start;align-items:baseline;gap:8px 16px;padding-top:24px}
 .member h3{font-size:clamp(24px,2.4vw,32px);letter-spacing:-.03em}
-.member .role{color:var(--signal)}
+.member .role{color:var(--signal);font-size:clamp(20px,2vw,26px);line-height:1.3;letter-spacing:.02em}
 .member .deg{display:block;color:var(--muted);margin-top:10px}
 .member p{margin-top:14px;font-size:15.5px;max-width:44ch}
 @media (max-width:600px){.team{grid-template-columns:1fr;gap:48px}}
@@ -366,7 +366,7 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
       <div class="hero-main">
         <div>
           <span class="eyebrow mono">Passive acoustic UAS detection</span>
-          <h1 class="d1">Hear the drone.<br>Find the launch.</h1>
+          <h1 class="d1">Architecting the battlefield audioscape</h1>
           <p class="lede">Low-cost listening nodes that detect drones at take-off and point to where they came from.</p>
           <div class="btns">
             <a class="btn primary" href="#product" data-go="product">Explore the node <span class="ar" aria-hidden="true">→</span></a>
@@ -396,7 +396,7 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
       <div class="metrics tab" data-r>
         <div class="metric"><b>25 km²</b><span class="mono">Covered per field</span></div>
         <div class="metric"><b>72 h</b><span class="mono">Unattended</span></div>
-        <div class="metric"><b>&lt;$1k</b><span class="mono">Per node</span></div>
+        <div class="metric"><b>&lt;$200</b><span class="mono">Per node</span></div>
         <div class="metric"><b>0</b><span class="mono">Emissions while listening</span></div>
       </div>
       <div class="metrics-note mono"><span>Design targets</span><span>Prototype · Fall 2026</span></div>
@@ -424,7 +424,7 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
         <p>Each node listens on its own. Together, a field of nodes turns rotor noise into a location.</p>
       </div>
       <div class="cards c4" data-r>
-        <div class="card"><div class="top mono"><span>01</span></div><h3>Hear</h3><p>Four microphones pick up rotor and engine noise.</p></div>
+        <div class="card"><div class="top mono"><span>01</span></div><h3>Hear</h3><p>Three microphones pick up rotor and engine noise.</p></div>
         <div class="card"><div class="top mono"><span>02</span></div><h3>Classify</h3><p>On-node models confirm a drone and name its type.</p></div>
         <div class="card"><div class="top mono"><span>03</span></div><h3>Locate</h3><p>Bearings from several nodes cross at the launch site.</p></div>
         <div class="card"><div class="top mono"><span>04</span></div><h3>Report</h3><p>A 30-byte cue reaches headquarters over a LoRa mesh.</p></div>
@@ -530,7 +530,7 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
       <div class="cards c3" style="margin-top:32px" data-r>
         <div class="card short"><div class="top mono"><span>Why forward</span></div><p>Launches sit beyond what rear-area sensors can hear.</p></div>
         <div class="card short"><div class="top mono"><span>How they get there</span></div><p>Placed by a recon team or dropped by a carrier drone.</p></div>
-        <div class="card short"><div class="top mono"><span>What they must be</span></div><p>Passive, hard to spot, meshed, and under $1,000.</p></div>
+        <div class="card short"><div class="top mono"><span>What they must be</span></div><p>Passive, hard to spot, meshed, and under $200.</p></div>
       </div>
     </div>
   </div>
@@ -591,35 +591,9 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
     <div class="wrap">
       <div class="cards c4" data-r>
         <div class="card"><div class="top mono"><span>Passive</span></div><h3>Listens only</h3><p>Transmits a short encrypted report only when it hears a drone.</p></div>
-        <div class="card"><div class="top mono"><span>Directional</span></div><h3>Four-mic array</h3><p>Finds the bearing and height of the sound.</p></div>
+        <div class="card"><div class="top mono"><span>Directional</span></div><h3>Three-mic array</h3><p>Finds the bearing and height of the sound.</p></div>
         <div class="card"><div class="top mono"><span>Endurance</span></div><h3>72 hours</h3><p>Unattended on one battery when air-dropped.</p></div>
-        <div class="card"><div class="top mono"><span>Expendable</span></div><h3>Under $1,000</h3><p>Commercial parts. Wipes its data if lost.</p></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="wrap split">
-      <div data-r>
-        <span class="eyebrow mono">Two-stage brain</span>
-        <h2>Listens on 0.2 W.</h2>
-        <p class="lede" style="margin-top:24px">A sentry chip screens sound all the time. The Raspberry Pi wakes only for a likely drone, confirms it, reports, and powers off.</p>
-        <div style="margin-top:48px"><div class="stat-big tab">≈10×</div><span class="mono">Less battery than an always-on Pi · 72 h</span></div>
-      </div>
-      <div class="chart" data-r>
-        <svg viewBox="0 0 520 240" role="img" aria-label="Power draw over one hour: a low steady line from the sentry chip, with two short spikes when the Pi wakes for a drone">
-          <text class="ct fg" x="0" y="12">POWER DRAW · 1 HOUR · 2 DRONES</text>
-          <line class="cg" x1="0" y1="60" x2="520" y2="60"/><line class="cg" x1="0" y1="120" x2="520" y2="120"/>
-          <line class="cg" x1="0" y1="196" x2="520" y2="196"/>
-          <rect class="cb" x="0" y="188" width="520" height="8"/>
-          <rect class="cs" x="150" y="96" width="14" height="100"/>
-          <rect class="cs" x="360" y="96" width="14" height="100"/>
-          <line class="ca" x1="157" y1="96" x2="157" y2="70"/><line class="ca" x1="367" y1="96" x2="367" y2="70"/>
-          <text class="ct" x="170" y="80">PI ≈ 2 W</text>
-          <text class="ct" x="380" y="80">≈ 1 MIN</text>
-          <text class="ct" x="0" y="222">SENTRY ≈ 0.2 W · ALWAYS ON</text>
-          <text class="ct" x="520" y="222" text-anchor="end">60 MIN</text>
-        </svg>
+        <div class="card"><div class="top mono"><span>Expendable</span></div><h3>Under $200</h3><p>Commercial parts. Wipes its data if lost.</p></div>
       </div>
     </div>
   </div>
@@ -628,13 +602,12 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
     <div class="wrap split">
       <div data-r>
         <span class="eyebrow mono">Inside the node</span>
-        <h2>Five parts. Nothing exotic.</h2>
+        <h2>Nothing exotic.</h2>
       </div>
       <div class="spec" data-r>
         <dl>
-          <div class="r"><dt>Microphones</dt><dd>4-mic array<small>Three in a triangle, one raised</small></dd></div>
+          <div class="r"><dt>Microphones</dt><dd>3-mic array<small>Three in a triangle</small></dd></div>
           <div class="r"><dt>Sentry</dt><dd>Low-power chip, always on<small>Keeps the last 30 s of sound</small></dd></div>
-          <div class="r"><dt>Compute</dt><dd>Raspberry Pi<small>Off until woken</small></dd></div>
           <div class="r"><dt>Link</dt><dd>LoRa radio and GPS<small>Time and place on every detection</small></dd></div>
           <div class="r"><dt>Power</dt><dd>3-day pack, ≈ 0.15 kg<small>Brain and mics, estimate</small></dd></div>
         </dl>
@@ -669,20 +642,6 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
     </div>
   </div>
 
-  <div class="sec">
-    <div class="wrap">
-      <div class="sec-head" data-r>
-        <div><span class="eyebrow mono">The system</span><h2>More than a sensor.</h2></div>
-        <p>One hardware product and three tools that turn detections into decisions.</p>
-      </div>
-      <div class="cards c4" data-r>
-        <div class="card"><div class="top mono"><span>Hardware</span></div><h3>Listening Node</h3><p>Hears, finds direction, stamps time and place.</p></div>
-        <div class="card"><div class="top mono"><span>Software</span></div><h3>Mission planner</h3><p>Reads terrain, flags likely launch sites, places nodes.</p></div>
-        <div class="card"><div class="top mono"><span>Software</span></div><h3>Detection platform</h3><p>Tracks node health and crosses bearings into a fix.</p></div>
-        <div class="card"><div class="top mono"><span>People</span></div><h3>Field doctrine</h3><p>Who places the nodes and how a cue reaches targeting.</p></div>
-      </div>
-    </div>
-  </div>
 </section>
 
 <!-- ======================= SPECS ======================= -->
@@ -715,11 +674,12 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
         </div>
         <div class="readouts tab">
           <div class="readout"><div class="v" id="oNodes">121</div><span class="mono">Nodes</span></div>
-          <div class="readout"><div class="v" id="oGw">16</div><span class="mono">Gateways</span></div>
-          <div class="readout"><div class="v" id="oCost">$121k</div><span class="mono">At $1k a node</span></div>
+          <div class="readout"><div class="v" id="oGw">7</div><span class="mono">Gateways · 1 per 20 nodes</span></div>
+          <div class="readout"><div class="v" id="oCost">&lt;$24.2k</div><span class="mono">Nodes at &lt;$200 each</span></div>
           <div class="readout"><div class="v" id="oRange">500 m</div><span class="mono">Hearing range needed</span></div>
         </div>
         <p class="fine" id="spacingHelp">Every drone should reach at least two nodes, so spacing matches hearing range (planned 100–500 m). Real fields are denser near likely launch sites.</p>
+        <p class="fine">One gateway per 20 deployed nodes, rounded up. Cost covers listening nodes only; gateways are additional. Gateway markers are illustrative.</p>
       </div>
     </div>
   </div>
@@ -734,31 +694,23 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
         <div class="spec" data-r><h3>Field and network</h3><dl>
           <div class="r"><dt>Field size</dt><dd>5 × 5 km<small>25 km² per deployment</small></dd></div>
           <div class="r"><dt>Reach from HQ</dt><dd>Up to 50 km</dd></div>
-          <div class="r"><dt>Launch-area fix</dt><dd>≈ 100 m<small>Goal: 50 m</small></dd></div>
-          <div class="r"><dt>Time to cue</dt><dd>Minutes</dd></div>
-          <div class="r"><dt>Network</dt><dd>LoRa mesh → gateway → HQ<small>Two gateways per field</small></dd></div>
+          <div class="r"><dt>Network</dt><dd>LoRa mesh → gateway → HQ<small>One gateway per 20 deployed nodes</small></dd></div>
           <div class="r"><dt>Output</dt><dd>TAK / Cursor on Target</dd></div>
         </dl></div>
         <div class="spec" data-r><h3>Sensing</h3><dl>
-          <div class="r"><dt>Microphones</dt><dd>4-mic array per node</dd></div>
+          <div class="r"><dt>Microphones</dt><dd>3-mic array per node</dd></div>
           <div class="r"><dt>Hearing range</dt><dd>100–500 m per node</dd></div>
           <div class="r"><dt>Band</dt><dd>Infrasound to audible</dd></div>
-          <div class="r"><dt>Detection</dt><dd>Hum check, then neural-net confirm<small>Drone type with confidence</small></dd></div>
           <div class="r"><dt>Timing</dt><dd>GPS, backup clock</dd></div>
         </dl></div>
-        <div class="spec" data-r><h3>Power and endurance</h3><dl>
+        <div class="spec" data-r><h3>Power</h3><dl>
           <div class="r"><dt>Listening draw</dt><dd>≈ 0.2 W</dd></div>
-          <div class="r"><dt>Prototype</dt><dd>24 h</dd></div>
-          <div class="r"><dt>Air-dropped</dt><dd>72 h</dd></div>
-          <div class="r"><dt>Hand-placed</dt><dd>7 days +</dd></div>
-          <div class="r"><dt>Fixed site</dt><dd>Mains</dd></div>
         </dl></div>
         <div class="spec" data-r><h3>Build and cost</h3><dl>
           <div class="r"><dt>Drop node</dt><dd>≈ 0.6 kg, &lt; 50 mm wide<small>Survives a 10 m drop (goal)</small></dd></div>
           <div class="r"><dt>Signature</dt><dd>Passive<small>~30-byte encrypted reports; audio stays on the node</small></dd></div>
           <div class="r"><dt>Parts</dt><dd>Commercial, field-replaceable</dd></div>
-          <div class="r"><dt>Cost</dt><dd>&lt; $1,000 per node</dd></div>
-          <div class="r"><dt>Training</dt><dd>&lt; 1 day</dd></div>
+          <div class="r"><dt>Cost</dt><dd>&lt; $200 per node</dd></div>
         </dl></div>
       </div>
     </div>
@@ -778,25 +730,25 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
   <div class="sec" style="border-top:0;padding-top:0">
     <div class="wrap team">
       <article class="member" data-r>
-        <div class="ph"><img src="team-x.webp" alt="Portrait of X Chua" width="480" height="480" loading="lazy"><span class="ov">01</span></div>
+        <div class="ph"><img src="team-x.jpg" alt="Portrait of X Chua" width="1968" height="2048" loading="lazy"><span class="ov">01</span></div>
         <div class="who"><h3>X Chua</h3><span class="mono role">CEO</span></div>
         <span class="mono deg">Stanford GSB · MSx ’27</span>
         <p>Leads product and partnerships, and how the network is deployed and commanded.</p>
       </article>
       <article class="member" data-r>
-        <div class="ph"><img src="team-korina.webp" alt="Portrait of Korina Arpášová" width="480" height="480" loading="lazy"><span class="ov">02</span></div>
+        <div class="ph"><img src="team-korina.png" alt="Portrait of Korina Arpášová" width="480" height="625" loading="lazy"><span class="ov">02</span></div>
         <div class="who"><h3>Korina Arpášová</h3><span class="mono role">Technical Staff</span></div>
         <span class="mono deg">MS, Management Science &amp; Engineering ’26</span>
         <p>Builds the digital twin, signal processing and decision models.</p>
       </article>
       <article class="member" data-r>
-        <div class="ph"><img src="team-gina.webp" alt="Portrait of Gina Shapiro" width="480" height="480" loading="lazy"><span class="ov">03</span></div>
+        <div class="ph"><img src="team-gina.jpg" alt="Portrait of Gina Shapiro" width="1216" height="880" loading="lazy"><span class="ov">03</span></div>
         <div class="who"><h3>Gina Shapiro</h3><span class="mono role">COO</span></div>
         <span class="mono deg">BA, International Relations ’28</span>
         <p>Runs business development, research and the draft field doctrine.</p>
       </article>
       <article class="member" data-r>
-        <div class="ph"><img src="team-philip.webp" alt="Portrait of Philip Santiago" width="480" height="480" loading="lazy"><span class="ov">04</span></div>
+        <div class="ph"><img src="team-philip.jpg" alt="Portrait of Philip Santiago" width="3192" height="4016" loading="lazy"><span class="ov">04</span></div>
         <div class="who"><h3>Philip Santiago</h3><span class="mono role">CTO</span></div>
         <span class="mono deg">BS, Mechanical Engineering &amp; CS ’28</span>
         <p>Leads hardware: the acoustic sensor, its power system and delivery.</p>
@@ -910,7 +862,7 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
   window.addEventListener("hashchange",function(){ show((location.hash||"").slice(1)); });
 
   /* coverage planner */
-  var NS="http://www.w3.org/2000/svg", FIELD=5000, PAD=34, SIZE=492;
+  var NS="http://www.w3.org/2000/svg", FIELD=5000, PAD=34, SIZE=492, NODES_PER_GATEWAY=20, NODE_COST_LIMIT=200;
   var svg=document.getElementById("grid"), slider=document.getElementById("spacing");
   function el(t,a){ var n=document.createElementNS(NS,t); for(var k in a) n.setAttribute(k,a[k]); svg.appendChild(n); return n; }
   function px(m){ return PAD+m*SIZE/FIELD; }
@@ -924,15 +876,16 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
       txt(p,PAD+SIZE+20,k+" KM","", "middle");
     }
     el("rect",{x:PAD,y:PAD,width:SIZE,height:SIZE,"class":"gb"});
-    var n=Math.floor(FIELD/sp)+1, step=FIELD/(n-1), nodes=[], gws=0, r=n>30?2:(n>16?2.6:3.4);
-    for(var i=0;i<n;i++) for(var j=0;j<n;j++) nodes.push({x:i*step,y:j*step,g:(i%3===1&&j%3===1)});
-    if(nodes.filter(function(d){return d.g;}).length<2){ nodes[Math.floor(n/2)].g=true; nodes[nodes.length-1-Math.floor(n/2)].g=true; }
+    var n=Math.floor(FIELD/sp)+1, step=FIELD/(n-1), nodes=[], count=n*n, gws=Math.ceil(count/NODES_PER_GATEWAY), r=n>30?2:(n>16?2.6:3.4);
+    for(var i=0;i<n;i++) for(var j=0;j<n;j++) nodes.push({x:i*step,y:j*step,g:false});
+    // Distribute illustrative gateway markers evenly through the display grid.
+    for(var gateway=0;gateway<gws;gateway++) nodes[Math.floor((gateway+.5)*count/gws)].g=true;
     var site={x:3650,y:1350};
     nodes.slice().sort(function(a,b){ return Math.hypot(a.x-site.x,a.y-site.y)-Math.hypot(b.x-site.x,b.y-site.y); }).slice(1,4)
       .forEach(function(d){ el("line",{x1:px(d.x),y1:px(d.y),x2:px(site.x),y2:px(site.y),"class":"gbr"}); });
     nodes.forEach(function(d){
-      if(d.g){ gws++; el("rect",{x:px(d.x)-r-1.5,y:px(d.y)-r-1.5,width:2*r+3,height:2*r+3,"class":"gw"}); }
-      else el("circle",{cx:px(d.x),cy:px(d.y),r:r,"class":"gn"});
+      el("circle",{cx:px(d.x),cy:px(d.y),r:r,"class":"gn"});
+      if(d.g) el("rect",{x:px(d.x)+r+2,y:px(d.y)-r-1.5,width:2*r+3,height:2*r+3,"class":"gw"});
     });
     var sx=px(site.x), sy=px(site.y);
     el("circle",{cx:sx,cy:sy,r:15,"class":"gfx"});
@@ -940,11 +893,11 @@ details p{padding:0 0 22px;max-width:56ch;font-size:15.5px}
     txt(sx+22,sy-14,"LAUNCH SITE","hi");
     txt(PAD,PAD-14,"5 × 5 KM · "+(n*n)+" NODES","fg");
     txt(PAD+SIZE,PAD-14,"HQ ≤ 50 KM →","","end");
-    var count=n*n, cost=count*1000;
+    var cost=count*NODE_COST_LIMIT;
     document.getElementById("spacingOut").textContent=sp.toLocaleString("en-US")+" m";
     document.getElementById("oNodes").textContent=count.toLocaleString("en-US");
     document.getElementById("oGw").textContent=gws;
-    document.getElementById("oCost").textContent=cost>=1e6?("$"+(cost/1e6).toFixed(2)+"M"):("$"+Math.round(cost/1000)+"k");
+    document.getElementById("oCost").textContent="<$"+(cost/1000).toLocaleString("en-US",{maximumFractionDigits:1})+"k";
     document.getElementById("oRange").textContent=sp.toLocaleString("en-US")+" m";
   }
   slider.addEventListener("input",draw);
